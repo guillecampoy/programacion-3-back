@@ -1,18 +1,13 @@
 package com.tup.programacion3;
 
-import com.tup.programacion3.entities.Categoria;
 import com.tup.programacion3.entities.Pedido;
 import com.tup.programacion3.entities.Producto;
 import com.tup.programacion3.entities.Usuario;
-import com.tup.programacion3.enums.Estado;
-import com.tup.programacion3.enums.FormaPago;
-import com.tup.programacion3.enums.Rol;
+import com.tup.programacion3.seed.DatosSemilla;
+import com.tup.programacion3.seed.DatosSemillaFactory;
 
-import java.time.LocalDate;
-import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Main {
     private static DatosSemilla datos;
@@ -73,7 +68,7 @@ public class Main {
     }
 
     private static void instanciarDatos() {
-        datos = crearDatosSemilla();
+        datos = DatosSemillaFactory.crear();
         System.out.println("Datos instanciados correctamente.");
         System.out.println("Usuarios: " + datos.usuarios().size());
         System.out.println("Categorias: " + datos.categorias().size());
@@ -124,15 +119,7 @@ public class Main {
 
     private static void compararProductoConColeccion() {
         DatosSemilla datosSemilla = obtenerDatos();
-        Producto productoNuevo = new Producto(
-                "Cafe molido",
-                3200.0,
-                "Cafe tostado molido 500g",
-                30,
-                "cafe-molido.jpg",
-                true,
-                datosSemilla.categoriaAlmacen()
-        );
+        Producto productoNuevo = datosSemilla.productoParaComparar();
 
         System.out.println("Producto nuevo a comparar:");
         System.out.println(productoNuevo);
@@ -153,80 +140,10 @@ public class Main {
 
     private static DatosSemilla obtenerDatos() {
         if (datos == null) {
-            datos = crearDatosSemilla();
+            datos = DatosSemillaFactory.crear();
             System.out.println("No habia datos cargados. Se instanciaron datos semilla automaticamente.");
             System.out.println();
         }
         return datos;
-    }
-
-    private static DatosSemilla crearDatosSemilla() {
-        Set<Usuario> usuarios = new LinkedHashSet<>();
-        Set<Categoria> categorias = new LinkedHashSet<>();
-        Set<Producto> productos = new LinkedHashSet<>();
-        Set<Pedido> pedidos = new LinkedHashSet<>();
-
-        Usuario usuario1 = new Usuario("Ana", "Garcia", "ana.garcia@mail.com", "3515551001", "ana123", Rol.USUARIO);
-        Usuario usuario2 = new Usuario("Bruno", "Perez", "bruno.perez@mail.com", "3515551002", "bruno123", Rol.ADMIN);
-        usuarios.add(usuario1);
-        usuarios.add(usuario2);
-
-        Categoria almacen = new Categoria("Almacen", "Productos secos y envasados");
-        Categoria bebidas = new Categoria("Bebidas", "Bebidas frias y calientes");
-        Categoria limpieza = new Categoria("Limpieza", "Articulos de limpieza del hogar");
-        categorias.add(almacen);
-        categorias.add(bebidas);
-        categorias.add(limpieza);
-
-        Producto cafeMolido = new Producto("Cafe molido", 3200.0, "Cafe tostado molido 500g", 30, "cafe-molido.jpg", true, almacen);
-        Producto yerbaMate = new Producto("Yerba mate", 2800.0, "Yerba mate tradicional 1kg", 45, "yerba-mate.jpg", true, almacen);
-        Producto arroz = new Producto("Arroz largo fino", 1300.0, "Arroz largo fino 1kg", 60, "arroz.jpg", true, almacen);
-        Producto fideos = new Producto("Fideos tirabuzon", 950.0, "Fideos secos tirabuzon 500g", 80, "fideos.jpg", true, almacen);
-        Producto gaseosa = new Producto("Gaseosa cola", 1800.0, "Gaseosa cola 2.25L", 35, "gaseosa-cola.jpg", true, bebidas);
-        Producto aguaMineral = new Producto("Agua mineral", 900.0, "Agua mineral sin gas 1.5L", 50, "agua-mineral.jpg", true, bebidas);
-        Producto jugoNaranja = new Producto("Jugo de naranja", 1500.0, "Jugo de naranja 1L", 25, "jugo-naranja.jpg", true, bebidas);
-        Producto detergente = new Producto("Detergente", 1200.0, "Detergente concentrado 750ml", 40, "detergente.jpg", true, limpieza);
-        Producto lavandina = new Producto("Lavandina", 1100.0, "Lavandina tradicional 1L", 38, "lavandina.jpg", true, limpieza);
-        Producto esponja = new Producto("Esponja multiuso", 700.0, "Esponja multiuso doble cara", 70, "esponja.jpg", true, limpieza);
-        productos.add(cafeMolido);
-        productos.add(yerbaMate);
-        productos.add(arroz);
-        productos.add(fideos);
-        productos.add(gaseosa);
-        productos.add(aguaMineral);
-        productos.add(jugoNaranja);
-        productos.add(detergente);
-        productos.add(lavandina);
-        productos.add(esponja);
-
-        Pedido pedido1 = new Pedido(LocalDate.of(2026, 5, 10), Estado.CONFIRMADO, FormaPago.TARJETA, usuario1);
-        pedido1.addDetallePedido(cafeMolido, 1);
-        pedido1.addDetallePedido(gaseosa, 2);
-
-        Pedido pedido2 = new Pedido(LocalDate.of(2026, 5, 12), Estado.PENDIENTE, FormaPago.EFECTIVO, usuario1);
-        pedido2.addDetallePedido(yerbaMate, 1);
-        pedido2.addDetallePedido(detergente, 1);
-        pedido2.addDetallePedido(aguaMineral, 3);
-
-        Pedido pedido3 = new Pedido(LocalDate.of(2026, 5, 13), Estado.TERMINADO, FormaPago.TRANSFERENCIA, usuario2);
-        pedido3.addDetallePedido(arroz, 2);
-        pedido3.addDetallePedido(fideos, 4);
-        pedido3.addDetallePedido(lavandina, 1);
-
-        pedidos.add(pedido1);
-        pedidos.add(pedido2);
-        pedidos.add(pedido3);
-
-        return new DatosSemilla(usuarios, categorias, productos, pedidos, cafeMolido, almacen);
-    }
-
-    private record DatosSemilla(
-            Set<Usuario> usuarios,
-            Set<Categoria> categorias,
-            Set<Producto> productos,
-            Set<Pedido> pedidos,
-            Producto productoParaMostrar,
-            Categoria categoriaAlmacen
-    ) {
     }
 }
