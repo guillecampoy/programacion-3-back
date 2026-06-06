@@ -58,7 +58,7 @@ public class Main {
     }
 
     private static void mostrarMenu() {
-        System.out.println("=== TP ToString - Colecciones ===");
+        System.out.println("=== TP Lombok - DTOs ===");
         System.out.println("1. Instanciar datos");
         System.out.println("2. Mostrar un producto usando toString()");
         System.out.println("3. Listar productos cargados");
