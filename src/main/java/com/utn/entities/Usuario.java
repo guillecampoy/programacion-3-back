@@ -1,5 +1,6 @@
 package com.utn.entities;
 
+import com.utn.dtos.UsuarioDTO;
 import com.utn.enums.Rol;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -12,7 +13,6 @@ import java.util.Set;
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
-@ToString
 public class Usuario extends Base{
     private String nombre;
     private String apellido;
@@ -27,6 +27,11 @@ public class Usuario extends Base{
 
     public void addPedido(Pedido pedido) {
         this.pedidos.add(pedido);
+    }
+
+    @Override
+    public String toString() {
+        return UsuarioDTO.from(this).toString();
     }
 
 }
