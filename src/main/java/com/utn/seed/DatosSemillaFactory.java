@@ -9,6 +9,7 @@ import com.utn.enums.FormaPago;
 import com.utn.enums.Rol;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -35,9 +36,39 @@ public class DatosSemillaFactory {
 
     private static UsuariosSemilla crearUsuarios() {
         Set<Usuario> usuarios = new LinkedHashSet<>();
-        Usuario ana = new Usuario("Ana", "Garcia", "ana.garcia@mail.com", "3515551001", "ana123", Rol.USUARIO);
-        Usuario bruno = new Usuario("Bruno", "Perez", "bruno.perez@mail.com", "3515551002", "bruno123", Rol.ADMIN);
-        Usuario guille = new Usuario("Guillermo", "Campoy", "guillecamp@hotmail.com", "1164725999", "guille456", Rol.USUARIO);
+        Usuario ana = Usuario.builder()
+                .nombre("Ana")
+                .apellido("Garcia")
+                .id(48L)
+                .mail("anagarcia@gmail.com")
+                .celular("123-456-7890")
+                .contrasenia("Anita345")
+                .createdAt(LocalDateTime.now())
+                .rol(Rol.USUARIO)
+                .eliminado(false)
+                .build();
+        Usuario bruno = Usuario.builder()
+                .nombre("Bruno")
+                .apellido("Juárez")
+                .id(50L)
+                .mail("bjuarez90@gmail.com")
+                .celular("123-456-7890")
+                .contrasenia("BruN096")
+                .createdAt(LocalDateTime.now())
+                .rol(Rol.ADMIN)
+                .eliminado(false)
+                .build();
+        Usuario guille = Usuario.builder()
+                .nombre("Guillermo")
+                .apellido("Campoy")
+                .id(66L)
+                .mail("gcampoy@gmail.com")
+                .celular("1164725999")
+                .contrasenia("gcampoy89")
+                .createdAt(LocalDateTime.now())
+                .rol(Rol.USUARIO)
+                .eliminado(false)
+                .build();
 
         usuarios.add(ana);
         usuarios.add(bruno);
@@ -48,10 +79,27 @@ public class DatosSemillaFactory {
 
     private static CategoriasSemilla crearCategorias() {
         Set<Categoria> categorias = new LinkedHashSet<>();
-        Categoria almacen = new Categoria("Almacen", "Productos secos y envasados");
-        Categoria bebidas = new Categoria("Bebidas", "Bebidas frias y calientes");
-        Categoria limpieza = new Categoria("Limpieza", "Articulos de limpieza del hogar");
-
+        Categoria almacen = Categoria.builder()
+                .nombre("Almacen")
+                .descripcion("Productos secos y envasados")
+                .id(1L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Categoria bebidas = Categoria.builder()
+                .nombre("Bebidas")
+                .descripcion("Bebidas frias y calientes")
+                .id(2L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Categoria limpieza = Categoria.builder()
+                .nombre("Limpieza")
+                .descripcion("Articulos de limpieza del hogar")
+                .id(3L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
         categorias.add(almacen);
         categorias.add(bebidas);
         categorias.add(limpieza);
@@ -61,16 +109,126 @@ public class DatosSemillaFactory {
 
     private static ProductosSemilla crearProductos(CategoriasSemilla categorias) {
         Set<Producto> productos = new LinkedHashSet<>();
-        Producto cafeMolido = new Producto("Cafe molido", 3200.0, "Cafe tostado molido 500g", 30, "cafe-molido.jpg", true, categorias.almacen());
-        Producto yerbaMate = new Producto("Yerba mate", 2800.0, "Yerba mate tradicional 1kg", 45, "yerba-mate.jpg", true, categorias.almacen());
-        Producto arroz = new Producto("Arroz largo fino", 1300.0, "Arroz largo fino 1kg", 60, "arroz.jpg", true, categorias.almacen());
-        Producto fideos = new Producto("Fideos tirabuzon", 950.0, "Fideos secos tirabuzon 500g", 80, "fideos.jpg", true, categorias.almacen());
-        Producto gaseosa = new Producto("Gaseosa cola", 1800.0, "Gaseosa cola 2.25L", 35, "gaseosa-cola.jpg", true, categorias.bebidas());
-        Producto aguaMineral = new Producto("Agua mineral", 900.0, "Agua mineral sin gas 1.5L", 50, "agua-mineral.jpg", true, categorias.bebidas());
-        Producto jugoNaranja = new Producto("Jugo de naranja", 1500.0, "Jugo de naranja 1L", 25, "jugo-naranja.jpg", true, categorias.bebidas());
-        Producto detergente = new Producto("Detergente", 1200.0, "Detergente concentrado 750ml", 40, "detergente.jpg", true, categorias.limpieza());
-        Producto lavandina = new Producto("Lavandina", 1100.0, "Lavandina tradicional 1L", 38, "lavandina.jpg", true, categorias.limpieza());
-        Producto esponja = new Producto("Esponja multiuso", 700.0, "Esponja multiuso doble cara", 70, "esponja.jpg", true, categorias.limpieza());
+        Producto cafeMolido = Producto.builder()
+                .nombre("Cafe molido")
+                .precio(3200.0)
+                .descripcion("Cafe tostado molido 500g")
+                .imagen("cafe-molido.jpg")
+                .disponible(true)
+                .stock(20)
+                .categoria(categorias.almacen())
+                .id(1L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Producto yerbaMate = Producto.builder()
+                .nombre("Yerba mate")
+                .precio(2800.0)
+                .descripcion("Yerba mate tradicional 1kg")
+                .imagen("yerba.jpg")
+                .disponible(true)
+                .stock(48)
+                .categoria(categorias.almacen())
+                .id(2L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Producto arroz = Producto.builder()
+                .nombre("Arroz largo fino")
+                .precio(1300.0)
+                .descripcion("Arroz largo fino 1kg")
+                .imagen("arroz.jpg")
+                .disponible(true)
+                .stock(99)
+                .categoria(categorias.almacen())
+                .id(3L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Producto fideos = Producto.builder()
+                .nombre("Fideos moñito")
+                .precio(950.0)
+                .descripcion("Fideos moñito 500g")
+                .imagen("fideos-moñito.jpg")
+                .disponible(true)
+                .stock(150)
+                .categoria(categorias.almacen())
+                .id(4L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Producto gaseosa = Producto.builder()
+                .nombre("Gaseosa cola")
+                .precio(1800.0)
+                .descripcion("Gaseosa cola 2.25L")
+                .imagen("gaseosa-cola.jpg")
+                .disponible(true)
+                .stock(15)
+                .categoria(categorias.bebidas())
+                .id(5L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Producto aguaMineral = Producto.builder()
+                .nombre("Agua Mineral")
+                .precio(900.0)
+                .descripcion("Agua mineral sin gas 1.5L")
+                .imagen("agua.jpg")
+                .disponible(true)
+                .stock(25)
+                .categoria(categorias.bebidas())
+                .id(6L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Producto jugoNaranja = Producto.builder()
+                .nombre("Jugo de naranja")
+                .precio(1500.0)
+                .descripcion("Jugo de naranja 1L")
+                .imagen("jugo-naranja.jpg")
+                .disponible(true)
+                .stock(259)
+                .categoria(categorias.almacen())
+                .id(7L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Producto detergente = Producto.builder()
+                .nombre("Detergente")
+                .precio(1200.0)
+                .descripcion("Detergente concentrado limón 750ml")
+                .imagen("detergente-limon.jpg")
+                .disponible(true)
+                .stock(99)
+                .categoria(categorias.limpieza())
+                .id(8L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Producto lavandina = Producto.builder()
+                .nombre("Lavandina")
+                .precio(1100.0)
+                .descripcion("Lavandina concentrada 1L")
+                .imagen("lavandina.jpg")
+                .disponible(true)
+                .stock(80)
+                .categoria(categorias.limpieza())
+                .id(9L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        Producto esponja = Producto.builder()
+                .nombre("Esponja multiuso")
+                .precio(700.0)
+                .descripcion("Esponja multiuso doble cara")
+                .imagen("esponja.jpg")
+                .disponible(true)
+                .stock(20)
+                .categoria(categorias.almacen())
+                .id(10L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
 
         productos.add(cafeMolido);
         productos.add(yerbaMate);
@@ -120,16 +278,25 @@ public class DatosSemillaFactory {
     }
 
     private static Producto crearProductoEquivalenteAlCafeMolido() {
-        Categoria categoriaEquivalente = new Categoria("Almacen", "Productos secos y envasados");
-        return new Producto(
-                "Cafe molido",
-                3200.0,
-                "Cafe tostado molido 500g",
-                30,
-                "cafe-molido.jpg",
-                true,
-                categoriaEquivalente
-        );
+        Categoria categoriaEquivalente = Categoria.builder()
+                .nombre("Almacen")
+                .descripcion("Productos secos y envasados")
+                .id(1L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
+        return Producto.builder()
+                .nombre("Cafe molido")
+                .precio(3200.0)
+                .descripcion("Cafe tostado molido 500g")
+                .imagen("cafe-molido.jpg")
+                .disponible(true)
+                .stock(20)
+                .categoria(categoriaEquivalente)
+                .id(1L)
+                .createdAt(LocalDateTime.now())
+                .eliminado(false)
+                .build();
     }
 
     private record UsuariosSemilla(Set<Usuario> todos, Usuario ana, Usuario bruno, Usuario guille) {
