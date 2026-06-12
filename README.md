@@ -118,6 +118,31 @@ La implementacion del TP debe cubrir el siguiente flujo:
 9. Borrar 1 producto.
 10. Cerrar `EntityManager` y `EntityManagerFactory`.
 
+## Test de integracion JPA
+
+El test `JpaIntegrationTest` valida el flujo end to end solicitado por la consigna:
+
+- Crea un `EntityManagerFactory` con la unidad de persistencia `miUnidad`.
+- Usa la base H2 configurada en `persistence.xml`, creandola si no existe y reutilizandola si ya existe.
+- Limpia las tablas del dominio antes de persistir la semilla.
+- Persiste los datos de `DatosSemillaFactory`.
+- Valida que existan 2 usuarios, 3 categorias, 11 productos y 3 pedidos.
+- Valida que cada pedido tenga usuario y al menos 2 detalles.
+- Valida que cada detalle referencie un producto y tenga subtotal positivo.
+- Actualiza 2 productos.
+- Busca un usuario por `id`.
+- Busca un usuario por `mail`.
+- Borra 1 producto.
+- Cierra los recursos de JPA al finalizar.
+
+## Conclusiones esperadas
+
+El test de integracion deja cubiertos los puntos finales de la consigna:
+
+- Persistir objetos en base de datos.
+- Comprender el ciclo de vida de una entidad mediante persistencia, busqueda, actualizacion y borrado.
+- Comprender operaciones CRUD sobre entidades JPA.
+
 ## Dependencias esperadas
 
 Ademas de Lombok y JUnit, el proyecto debe incluir dependencias para:
@@ -145,3 +170,8 @@ Compilar y ejecutar tests:
 ```bash
 ./gradlew build
 ```
+
+## Salida esperada
+
+Al ejecutar `./gradlew run`, el programa muestra:
+COMPLETAR!!

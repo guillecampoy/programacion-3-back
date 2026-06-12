@@ -288,7 +288,19 @@ private static Set<Pedido> crearPedidos(UsuariosSemilla usuarios, ProductosSemil
         pedido3.addDetallePedido(productos.lavandina(), 1);
         pedidos.add(pedido3);
 
+        asignarIdsDetalles(pedidos);
+
         return pedidos;
+}
+
+private static void asignarIdsDetalles(Set<Pedido> pedidos) {
+        long id = 1L;
+        for (Pedido pedido : pedidos) {
+                for (var detallePedido : pedido.getDetallePedidos()) {
+                        detallePedido.setId(id);
+                        id++;
+                }
+        }
 }
 
 private static Pedido crearPedido(Long id, LocalDate fecha, Estado estado, FormaPago formaPago, Usuario usuario) {

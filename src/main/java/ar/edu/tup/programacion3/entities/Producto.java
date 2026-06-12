@@ -1,8 +1,11 @@
 package ar.edu.tup.programacion3.entities;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,6 +21,7 @@ public class Producto extends Base {
     private int stock;
     private String imagen;
     private Boolean disponible;
+    @ManyToOne
     private Categoria categoria;
 
     public void setCategoria(Categoria categoria) {

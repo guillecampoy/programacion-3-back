@@ -2,6 +2,13 @@ package ar.edu.tup.programacion3.entities;
 
 import ar.edu.tup.programacion3.enums.Estado;
 import ar.edu.tup.programacion3.enums.FormaPago;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -10,6 +17,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,14 +29,19 @@ public class Pedido extends Base implements Calculable {
     @EqualsAndHashCode.Include
     private LocalDate fecha;
     @EqualsAndHashCode.Include
+    @Enumerated(EnumType.STRING)
     private Estado estado;
     @Builder.Default
     private Double total = 0.0;
     @EqualsAndHashCode.Include
+    @Enumerated(EnumType.STRING)
     private FormaPago formaPago;
+    @ManyToOne
     @ToString.Exclude
     private Usuario usuario;
     @Builder.Default
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "pedido_id")
     private Set<DetallePedido> detallePedidos = new HashSet<>();
 
 

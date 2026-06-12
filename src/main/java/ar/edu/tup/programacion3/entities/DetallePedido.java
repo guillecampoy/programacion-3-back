@@ -1,8 +1,11 @@
 package ar.edu.tup.programacion3.entities;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,6 +19,7 @@ public class DetallePedido extends Base {
     @EqualsAndHashCode.Include
     private Double subtotal;
     @EqualsAndHashCode.Include
+    @ManyToOne
     private Producto producto;
 
 }
