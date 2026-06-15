@@ -17,21 +17,14 @@ class PersistenciaInicialTest {
 
     @Test
     void creaBaseLocalYPersisteSemillaCuandoNoExiste() {
-        Path baseSinExtension = tempDir.resolve("jpa_db");
-        Path archivoBase = tempDir.resolve("jpa_db.mv.db");
-        List<Path> archivosBase = List.of(
-                archivoBase,
-                tempDir.resolve("jpa_db.trace.db"),
-                tempDir.resolve("jpa_db.lock.db")
-        );
-        String jdbcUrl = "jdbc:h2:file:" + baseSinExtension.toAbsolutePath();
+        ConfiguracionTemporal configuracion = crearConfiguracionTemporal();
 
-        assertFalse(Files.exists(archivoBase));
+        assertFalse(Files.exists(configuracion.archivoBase()));
 
         try (PersistenciaInicial persistenciaInicial = PersistenciaInicial.inicializar(
-                archivoBase,
-                archivosBase,
-                jdbcUrl
+                configuracion.archivoBase(),
+                configuracion.archivosBase(),
+                configuracion.jdbcUrl()
         )) {
             PersistenciaInicial.ResumenPersistencia resumen = persistenciaInicial.contarDatos();
 
@@ -43,6 +36,44 @@ class PersistenciaInicialTest {
             assertEquals(3L, resumen.pedidos());
         }
 
-        assertTrue(Files.exists(archivoBase));
+        assertTrue(Files.exists(configuracion.archivoBase()));
+    }
+
+    @Test
+    void actualizaProductosPersistidos() {
+        ConfiguracionTemporal configuracion = crearConfiguracionTemporal();
+
+        try (PersistenciaInicial persistenciaInicial = PersistenciaInicial.inicializar(
+                configuracion.archivoBase(),
+                configuracion.archivosBase(),
+                configuracion.jdbcUrl()
+        )) {
+            PersistenciaInicial.ProductoResumen cafe = persistenciaInicial.actualizarProducto(
+                    PersistenciaInicial.ProductoActualizacion.nombre(1L, "Cafe actualizado")
+            );
+            PersistenciaInicial.ProductoResumen yerba = persistenciaInicial.actualizarProducto(
+                    PersistenciaInicial.ProductoActualizacion.categoria(2L, 2L)
+            );
+
+            assertEquals("Cafe actualizado", cafe.nombre());
+            assertEquals(2L, yerba.categoriaId());
+            assertEquals("Bebidas", yerba.categoria());
+        }
+    }
+
+    private ConfiguracionTemporal crearConfiguracionTemporal() {
+        Path baseSinExtension = tempDir.resolve("jpa_db");
+        Path archivoBase = tempDir.resolve("jpa_db.mv.db");
+        List<Path> archivosBase = List.of(
+                archivoBase,
+                tempDir.resolve("jpa_db.trace.db"),
+                tempDir.resolve("jpa_db.lock.db")
+        );
+        String jdbcUrl = "jdbc:h2:file:" + baseSinExtension.toAbsolutePath();
+
+        return new ConfiguracionTemporal(archivoBase, archivosBase, jdbcUrl);
+    }
+
+    private record ConfiguracionTemporal(Path archivoBase, List<Path> archivosBase, String jdbcUrl) {
     }
 }

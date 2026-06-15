@@ -188,10 +188,23 @@ Opciones del menu:
 ```text
 1 - Mostrar estado
 2 - Borrar base local y reinstanciar semilla
+3 - Actualizar 2 productos
 0 - Salir
 ```
 
 La opcion `2` cierra JPA y la consola H2, borra los archivos locales `data/jpa_db.mv.db`, `data/jpa_db.trace.db` y `data/jpa_db.lock.db` si existen, vuelve a crear la base y persiste otra vez la semilla inicial: 2 usuarios, 3 pedidos con al menos 2 detalles por pedido, 3 categorias y 10 productos.
+
+La opcion `3` obliga a actualizar 2 productos distintos. Para cada producto:
+
+- Muestra la lista de productos disponibles.
+- Pide un id existente y no repetido.
+- Construye dinamicamente el menu de atributos editables.
+- Permite editar `nombre`, `precio`, `descripcion`, `stock`, `imagen`, `disponible` o `categoria`.
+- No tiene opcion por defecto: el usuario debe elegir explicitamente que atributo actualizar.
+- Muestra el valor actual o el detalle correspondiente antes de pedir el nuevo valor.
+- Valida estrictamente las entradas: textos no vacios, stock entero mayor o igual a 0, precio decimal mayor o igual a 0.01, disponible como `si/no`, `s/n` o `true/false` y categoria existente.
+
+La validacion de entradas esta centralizada en `EntradaValidada` para reutilizarla en las proximas opciones del menu.
 
 Compilar y ejecutar tests:
 
