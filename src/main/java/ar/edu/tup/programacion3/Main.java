@@ -35,7 +35,7 @@ public class Main {
                 mostrarMenu();
                 String opcion;
                 try {
-                    opcion = entradaValidada.leerOpcion("Opcion: ", Set.of("0", "1", "2", "3", "4", "5"));
+                    opcion = entradaValidada.leerOpcion("Opcion: ", Set.of("0", "1", "2", "3", "4", "5", "6", "7", "8"));
                 } catch (IllegalStateException exception) {
                     break;
                 }
@@ -54,6 +54,9 @@ public class Main {
                     case "3" -> actualizarDosProductos(persistenciaInicial, entradaValidada);
                     case "4" -> buscarUsuarioPorId(persistenciaInicial, entradaValidada);
                     case "5" -> buscarUsuarioPorMail(persistenciaInicial, entradaValidada);
+                    case "6" -> borrarProducto(persistenciaInicial, entradaValidada);
+                    case "7" -> listarProductosEliminados(persistenciaInicial);
+                    case "8" -> restaurarProducto(persistenciaInicial, entradaValidada);
                     case "0" -> salir = true;
                     default -> throw new IllegalStateException("Opcion no contemplada: " + opcion);
                 }
@@ -73,7 +76,8 @@ public class Main {
         System.out.println("Datos iniciales persistidos: " + (persistenciaInicial.isDatosInicialesPersistidos() ? "si" : "no"));
         System.out.println("Usuarios: " + resumen.usuarios());
         System.out.println("Categorias: " + resumen.categorias());
-        System.out.println("Productos: " + resumen.productos());
+        System.out.println("Productos activos: " + resumen.productosActivos());
+        System.out.println("Productos eliminados: " + resumen.productosEliminados());
         System.out.println("Pedidos: " + resumen.pedidos());
         System.out.println("Consola H2: " + h2LocalConsole.getUrl());
         System.out.println("JDBC URL: " + JDBC_H2_LOCAL);
@@ -88,6 +92,9 @@ public class Main {
         System.out.println("3 - Actualizar " + CANTIDAD_PRODUCTOS_A_ACTUALIZAR + " productos");
         System.out.println("4 - Buscar usuario por id");
         System.out.println("5 - Buscar usuario por mail parcial");
+        System.out.println("6 - Borrar 1 producto");
+        System.out.println("7 - Listar productos con borrado logico");
+        System.out.println("8 - Revertir borrado logico de producto");
         System.out.println("0 - Salir");
     }
 
@@ -131,6 +138,65 @@ public class Main {
 
         System.out.println("Usuarios encontrados:");
         usuarios.forEach(usuario -> System.out.println(formatearUsuario(usuario)));
+    }
+
+    private static void borrarProducto(
+            PersistenciaInicial persistenciaInicial,
+            EntradaValidada entradaValidada
+    ) {
+        List<PersistenciaInicial.ProductoResumen> productos = persistenciaInicial.listarProductos();
+        if (productos.isEmpty()) {
+            System.out.println("No hay productos activos para borrar.");
+            return;
+        }
+
+        Set<Long> idsValidos = new HashSet<>();
+        productos.forEach(producto -> idsValidos.add(producto.id()));
+        mostrarProductos(productos);
+
+        long productoId = entradaValidada.leerLong(
+                "Id de producto a borrar: ",
+                idsValidos::contains,
+                "Ingrese un id de producto activo existente."
+        );
+        PersistenciaInicial.ProductoResumen productoBorrado = persistenciaInicial.borrarProducto(productoId);
+
+        System.out.println("Producto borrado logicamente: " + formatearProducto(productoBorrado));
+    }
+
+    private static void listarProductosEliminados(PersistenciaInicial persistenciaInicial) {
+        List<PersistenciaInicial.ProductoResumen> productosEliminados = persistenciaInicial.listarProductosEliminados();
+        if (productosEliminados.isEmpty()) {
+            System.out.println("No hay productos con borrado logico.");
+            return;
+        }
+
+        System.out.println("Productos con borrado logico:");
+        mostrarProductos(productosEliminados);
+    }
+
+    private static void restaurarProducto(
+            PersistenciaInicial persistenciaInicial,
+            EntradaValidada entradaValidada
+    ) {
+        List<PersistenciaInicial.ProductoResumen> productosEliminados = persistenciaInicial.listarProductosEliminados();
+        if (productosEliminados.isEmpty()) {
+            System.out.println("No hay productos con borrado logico para restaurar.");
+            return;
+        }
+
+        Set<Long> idsValidos = new HashSet<>();
+        productosEliminados.forEach(producto -> idsValidos.add(producto.id()));
+        mostrarProductos(productosEliminados);
+
+        long productoId = entradaValidada.leerLong(
+                "Id de producto a restaurar: ",
+                idsValidos::contains,
+                "Ingrese un id de producto eliminado existente."
+        );
+        PersistenciaInicial.ProductoResumen productoRestaurado = persistenciaInicial.restaurarProducto(productoId);
+
+        System.out.println("Producto restaurado: " + formatearProducto(productoRestaurado));
     }
 
     private static void actualizarDosProductos(
@@ -302,6 +368,8 @@ public class Main {
                 + producto.imagen()
                 + " | disponible: "
                 + (Boolean.TRUE.equals(producto.disponible()) ? "si" : "no")
+                + " | eliminado: "
+                + (Boolean.TRUE.equals(producto.eliminado()) ? "si" : "no")
                 + " | categoria: "
                 + producto.categoria();
     }

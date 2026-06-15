@@ -191,6 +191,9 @@ Opciones del menu:
 3 - Actualizar 2 productos
 4 - Buscar usuario por id
 5 - Buscar usuario por mail parcial
+6 - Borrar 1 producto
+7 - Listar productos con borrado logico
+8 - Revertir borrado logico de producto
 0 - Salir
 ```
 
@@ -212,6 +215,12 @@ La opcion `4` busca un usuario por id. Valida que el id sea numerico y mayor a 0
 
 La opcion `5` busca usuarios por coincidencia parcial de mail usando `like`. Permite ingresar fragmentos como `gmail`, `bruno` o `@gmail.com`; valida que el texto no este vacio ni tenga espacios y muestra todos los usuarios encontrados.
 
+La opcion `6` borra logicamente 1 producto. El producto no se elimina fisicamente de la base: se marca `eliminado = true`, desaparece de los listados activos y sigue existiendo en la tabla `Producto`.
+
+La opcion `7` lista solamente productos con borrado logico (`eliminado = true`).
+
+La opcion `8` revierte el borrado logico de un producto. Solo permite elegir ids de productos que ya esten marcados con `eliminado = true`; al restaurarlo vuelve a `eliminado = false` y reaparece en los listados activos.
+
 Compilar y ejecutar tests:
 
 ```bash
@@ -223,6 +232,7 @@ Compilar y ejecutar tests:
 Al ejecutar `./gradlew run`, el programa muestra:
 - Si la base H2 local existia al iniciar.
 - Si se persistieron los datos iniciales.
-- El total actual de usuarios, categorias, productos y pedidos.
+- El total actual de usuarios, categorias y pedidos.
+- Productos activos y productos eliminados en lineas separadas.
 - Los datos de conexion para la consola web H2 local.
 - El menu con opcion explicita de salida.

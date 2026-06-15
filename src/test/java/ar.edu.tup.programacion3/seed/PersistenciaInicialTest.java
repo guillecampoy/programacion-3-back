@@ -33,6 +33,8 @@ class PersistenciaInicialTest {
             assertEquals(2L, resumen.usuarios());
             assertEquals(3L, resumen.categorias());
             assertEquals(10L, resumen.productos());
+            assertEquals(10L, resumen.productosActivos());
+            assertEquals(0L, resumen.productosEliminados());
             assertEquals(3L, resumen.pedidos());
         }
 
@@ -83,6 +85,40 @@ class PersistenciaInicialTest {
             assertEquals("Bruno", usuariosPorApellido.get(0).nombre());
             assertTrue(persistenciaInicial.buscarUsuarioPorId(999L).isEmpty());
             assertTrue(persistenciaInicial.buscarUsuariosPorMail("noexiste").isEmpty());
+        }
+    }
+
+    @Test
+    void borraProductoLogicamenteYPermiteRestaurarlo() {
+        ConfiguracionTemporal configuracion = crearConfiguracionTemporal();
+
+        try (PersistenciaInicial persistenciaInicial = PersistenciaInicial.inicializar(
+                configuracion.archivoBase(),
+                configuracion.archivosBase(),
+                configuracion.jdbcUrl()
+        )) {
+            PersistenciaInicial.ProductoResumen productoBorrado = persistenciaInicial.borrarProducto(1L);
+            PersistenciaInicial.ResumenPersistencia resumen = persistenciaInicial.contarDatos();
+            List<PersistenciaInicial.ProductoResumen> productosActivos = persistenciaInicial.listarProductos();
+            List<PersistenciaInicial.ProductoResumen> productosEliminados = persistenciaInicial.listarProductosEliminados();
+
+            assertTrue(productoBorrado.eliminado());
+            assertEquals(10L, resumen.productos());
+            assertEquals(9L, resumen.productosActivos());
+            assertEquals(1L, resumen.productosEliminados());
+            assertEquals(9, productosActivos.size());
+            assertFalse(productosActivos.stream().anyMatch(producto -> producto.id().equals(1L)));
+            assertEquals(1, productosEliminados.size());
+            assertEquals(1L, productosEliminados.get(0).id());
+
+            PersistenciaInicial.ProductoResumen productoRestaurado = persistenciaInicial.restaurarProducto(1L);
+            PersistenciaInicial.ResumenPersistencia resumenRestaurado = persistenciaInicial.contarDatos();
+
+            assertFalse(productoRestaurado.eliminado());
+            assertEquals(10L, resumenRestaurado.productosActivos());
+            assertEquals(0L, resumenRestaurado.productosEliminados());
+            assertTrue(persistenciaInicial.listarProductos().stream().anyMatch(producto -> producto.id().equals(1L)));
+            assertTrue(persistenciaInicial.listarProductosEliminados().isEmpty());
         }
     }
 

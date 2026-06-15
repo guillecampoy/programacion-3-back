@@ -75,13 +75,31 @@ public class PersistenciaInicial implements AutoCloseable {
                 contar(entityManager, Usuario.class),
                 contar(entityManager, Categoria.class),
                 contar(entityManager, Producto.class),
+                contarProductosPorEliminado(entityManager, false),
+                contarProductosPorEliminado(entityManager, true),
                 contar(entityManager, Pedido.class)
         ));
     }
 
     public List<ProductoResumen> listarProductos() {
         return consultar(entityManager ->
-                entityManager.createQuery("select p from Producto p order by p.id", Producto.class)
+                entityManager.createQuery(
+                                "select p from Producto p where p.eliminado = false order by p.id",
+                                Producto.class
+                        )
+                        .getResultList()
+                        .stream()
+                        .map(ProductoResumen::from)
+                        .toList()
+        );
+    }
+
+    public List<ProductoResumen> listarProductosEliminados() {
+        return consultar(entityManager ->
+                entityManager.createQuery(
+                                "select p from Producto p where p.eliminado = true order by p.id",
+                                Producto.class
+                        )
                         .getResultList()
                         .stream()
                         .map(ProductoResumen::from)
@@ -156,6 +174,30 @@ public class PersistenciaInicial implements AutoCloseable {
         });
     }
 
+    public ProductoResumen borrarProducto(Long id) {
+        return ejecutarEnTransaccion(entityManager -> {
+            Producto producto = entityManager.find(Producto.class, id);
+            if (producto == null || Boolean.TRUE.equals(producto.getEliminado())) {
+                throw new IllegalArgumentException("No existe producto activo con id " + id);
+            }
+
+            producto.setEliminado(true);
+            return ProductoResumen.from(producto);
+        });
+    }
+
+    public ProductoResumen restaurarProducto(Long id) {
+        return ejecutarEnTransaccion(entityManager -> {
+            Producto producto = entityManager.find(Producto.class, id);
+            if (producto == null || !Boolean.TRUE.equals(producto.getEliminado())) {
+                throw new IllegalArgumentException("No existe producto eliminado con id " + id);
+            }
+
+            producto.setEliminado(false);
+            return ProductoResumen.from(producto);
+        });
+    }
+
     private void persistirDatosInicialesSiCorresponde() {
         if (!debePersistirDatosIniciales()) {
             return;
@@ -183,6 +225,15 @@ public class PersistenciaInicial implements AutoCloseable {
                         "select count(e) from " + entityClass.getSimpleName() + " e",
                         Long.class
                 )
+                .getSingleResult();
+    }
+
+    private long contarProductosPorEliminado(EntityManager entityManager, boolean eliminado) {
+        return entityManager.createQuery(
+                        "select count(p) from Producto p where p.eliminado = :eliminado",
+                        Long.class
+                )
+                .setParameter("eliminado", eliminado)
                 .getSingleResult();
     }
 
@@ -232,7 +283,14 @@ public class PersistenciaInicial implements AutoCloseable {
         }
     }
 
-    public record ResumenPersistencia(long usuarios, long categorias, long productos, long pedidos) {
+    public record ResumenPersistencia(
+            long usuarios,
+            long categorias,
+            long productos,
+            long productosActivos,
+            long productosEliminados,
+            long pedidos
+    ) {
         public long totalRegistros() {
             return usuarios + categorias + productos + pedidos;
         }
@@ -285,6 +343,7 @@ public class PersistenciaInicial implements AutoCloseable {
             int stock,
             String imagen,
             Boolean disponible,
+            Boolean eliminado,
             Long categoriaId,
             String categoria
     ) {
@@ -297,6 +356,7 @@ public class PersistenciaInicial implements AutoCloseable {
                     producto.getStock(),
                     producto.getImagen(),
                     producto.getDisponible(),
+                    producto.getEliminado(),
                     producto.getCategoria() == null ? null : producto.getCategoria().getId(),
                     producto.getCategoria() == null ? "" : producto.getCategoria().getNombre()
             );

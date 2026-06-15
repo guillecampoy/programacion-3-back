@@ -157,26 +157,28 @@ class JpaIntegrationTest {
 
     @Test
     @Order(5)
-    void borraUnProducto() {
+    void borraUnProductoLogicamente() {
         ejecutarEnTransaccion(entityManager -> {
             Producto producto = entityManager.find(Producto.class, 10L);
             assertNotNull(producto);
-            entityManager.remove(producto);
+            producto.setEliminado(true);
         });
 
-        assertEquals(9L, contar(Producto.class));
-        boolean productoBorrado = consultar(entityManager ->
+        assertEquals(10L, contar(Producto.class));
+        Producto productoBorrado = buscar(Producto.class, 10L);
+        boolean productoAusenteDeActivos = consultar(entityManager ->
                 entityManager.createQuery(
-                                "select p from Producto p where p.id = :id",
+                                "select p from Producto p where p.id = :id and p.eliminado = false",
                                 Producto.class
                         )
                         .setParameter("id", 10L)
                         .getResultList()
                         .isEmpty()
         );
-        assertTrue(productoBorrado);
+        assertTrue(productoBorrado.getEliminado());
+        assertTrue(productoAusenteDeActivos);
 
-        imprimirResultado("DELETE", "producto id=10 eliminado, productos restantes=9");
+        imprimirResultado("DELETE_LOGICO", "producto id=10 marcado eliminado=true, productos fisicos=10");
     }
 
     private void limpiarBase(EntityManager entityManager) {
