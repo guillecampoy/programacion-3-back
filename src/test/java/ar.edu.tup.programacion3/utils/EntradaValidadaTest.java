@@ -61,6 +61,19 @@ class EntradaValidadaTest {
         assertEquals("Cafe tostado", texto);
     }
 
+    @Test
+    void validaTextoConPredicadoPersonalizado() {
+        EntradaValidada entradaValidada = crearEntrada("con espacios\ngmail\n");
+
+        String texto = entradaValidada.leerTexto(
+                "Texto: ",
+                entrada -> !entrada.matches(".*\\s+.*"),
+                "Ingrese un texto sin espacios."
+        );
+
+        assertEquals("gmail", texto);
+    }
+
     private EntradaValidada crearEntrada(String entrada) {
         return new EntradaValidada(new Scanner(entrada));
     }

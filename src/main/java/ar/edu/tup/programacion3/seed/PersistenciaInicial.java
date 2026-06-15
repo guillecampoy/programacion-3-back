@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -94,6 +95,26 @@ public class PersistenciaInicial implements AutoCloseable {
                         .getResultList()
                         .stream()
                         .map(CategoriaResumen::from)
+                        .toList()
+        );
+    }
+
+    public Optional<UsuarioResumen> buscarUsuarioPorId(Long id) {
+        return consultar(entityManager -> Optional.ofNullable(entityManager.find(Usuario.class, id))
+                .map(UsuarioResumen::from)
+        );
+    }
+
+    public List<UsuarioResumen> buscarUsuariosPorMail(String mailParcial) {
+        return consultar(entityManager ->
+                entityManager.createQuery(
+                                "select u from Usuario u where lower(u.mail) like lower(:mail) order by u.id",
+                                Usuario.class
+                        )
+                        .setParameter("mail", "%" + mailParcial + "%")
+                        .getResultList()
+                        .stream()
+                        .map(UsuarioResumen::from)
                         .toList()
         );
     }
@@ -285,6 +306,26 @@ public class PersistenciaInicial implements AutoCloseable {
     public record CategoriaResumen(Long id, String nombre) {
         public static CategoriaResumen from(Categoria categoria) {
             return new CategoriaResumen(categoria.getId(), categoria.getNombre());
+        }
+    }
+
+    public record UsuarioResumen(
+            Long id,
+            String nombre,
+            String apellido,
+            String mail,
+            String celular,
+            String rol
+    ) {
+        public static UsuarioResumen from(Usuario usuario) {
+            return new UsuarioResumen(
+                    usuario.getId(),
+                    usuario.getNombre(),
+                    usuario.getApellido(),
+                    usuario.getMail(),
+                    usuario.getCelular(),
+                    usuario.getRol() == null ? "" : usuario.getRol().name()
+            );
         }
     }
 }

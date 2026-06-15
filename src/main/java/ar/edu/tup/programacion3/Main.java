@@ -5,6 +5,7 @@ import ar.edu.tup.programacion3.seed.PersistenciaInicial;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -34,7 +35,7 @@ public class Main {
                 mostrarMenu();
                 String opcion;
                 try {
-                    opcion = entradaValidada.leerOpcion("Opcion: ", Set.of("0", "1", "2", "3"));
+                    opcion = entradaValidada.leerOpcion("Opcion: ", Set.of("0", "1", "2", "3", "4", "5"));
                 } catch (IllegalStateException exception) {
                     break;
                 }
@@ -51,6 +52,8 @@ public class Main {
                         mostrarEstado(persistenciaInicial, h2LocalConsole);
                     }
                     case "3" -> actualizarDosProductos(persistenciaInicial, entradaValidada);
+                    case "4" -> buscarUsuarioPorId(persistenciaInicial, entradaValidada);
+                    case "5" -> buscarUsuarioPorMail(persistenciaInicial, entradaValidada);
                     case "0" -> salir = true;
                     default -> throw new IllegalStateException("Opcion no contemplada: " + opcion);
                 }
@@ -83,7 +86,51 @@ public class Main {
         System.out.println("1 - Mostrar estado");
         System.out.println("2 - Borrar base local y reinstanciar semilla");
         System.out.println("3 - Actualizar " + CANTIDAD_PRODUCTOS_A_ACTUALIZAR + " productos");
+        System.out.println("4 - Buscar usuario por id");
+        System.out.println("5 - Buscar usuario por mail parcial");
         System.out.println("0 - Salir");
+    }
+
+    private static void buscarUsuarioPorId(
+            PersistenciaInicial persistenciaInicial,
+            EntradaValidada entradaValidada
+    ) {
+        long usuarioId = entradaValidada.leerLong(
+                "Id de usuario: ",
+                id -> id > 0,
+                "Ingrese un id numerico mayor a 0."
+        );
+        mostrarResultadoUsuario(persistenciaInicial.buscarUsuarioPorId(usuarioId));
+    }
+
+    private static void buscarUsuarioPorMail(
+            PersistenciaInicial persistenciaInicial,
+            EntradaValidada entradaValidada
+    ) {
+        String mailParcial = entradaValidada.leerTexto(
+                "Texto a buscar en mail: ",
+                entrada -> !entrada.isBlank() && !entrada.matches(".*\\s+.*"),
+                "Ingrese un texto no vacio y sin espacios."
+        );
+        mostrarResultadoUsuarios(persistenciaInicial.buscarUsuariosPorMail(mailParcial));
+    }
+
+    private static void mostrarResultadoUsuario(Optional<PersistenciaInicial.UsuarioResumen> usuario) {
+        if (usuario.isEmpty()) {
+            System.out.println("Usuario no encontrado.");
+            return;
+        }
+        System.out.println("Usuario encontrado: " + formatearUsuario(usuario.get()));
+    }
+
+    private static void mostrarResultadoUsuarios(List<PersistenciaInicial.UsuarioResumen> usuarios) {
+        if (usuarios.isEmpty()) {
+            System.out.println("No se encontraron usuarios.");
+            return;
+        }
+
+        System.out.println("Usuarios encontrados:");
+        usuarios.forEach(usuario -> System.out.println(formatearUsuario(usuario)));
     }
 
     private static void actualizarDosProductos(
@@ -257,6 +304,20 @@ public class Main {
                 + (Boolean.TRUE.equals(producto.disponible()) ? "si" : "no")
                 + " | categoria: "
                 + producto.categoria();
+    }
+
+    private static String formatearUsuario(PersistenciaInicial.UsuarioResumen usuario) {
+        return usuario.id()
+                + " - "
+                + usuario.nombre()
+                + " "
+                + usuario.apellido()
+                + " | mail: "
+                + usuario.mail()
+                + " | celular: "
+                + usuario.celular()
+                + " | rol: "
+                + usuario.rol();
     }
 
     private record CampoProductoEditable(

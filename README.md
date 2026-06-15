@@ -189,6 +189,8 @@ Opciones del menu:
 1 - Mostrar estado
 2 - Borrar base local y reinstanciar semilla
 3 - Actualizar 2 productos
+4 - Buscar usuario por id
+5 - Buscar usuario por mail parcial
 0 - Salir
 ```
 
@@ -205,6 +207,10 @@ La opcion `3` obliga a actualizar 2 productos distintos. Para cada producto:
 - Valida estrictamente las entradas: textos no vacios, stock entero mayor o igual a 0, precio decimal mayor o igual a 0.01, disponible como `si/no`, `s/n` o `true/false` y categoria existente.
 
 La validacion de entradas esta centralizada en `EntradaValidada` para reutilizarla en las proximas opciones del menu.
+
+La opcion `4` busca un usuario por id. Valida que el id sea numerico y mayor a 0, y muestra el detalle del usuario si existe.
+
+La opcion `5` busca usuarios por coincidencia parcial de mail usando `like`. Permite ingresar fragmentos como `gmail`, `bruno` o `@gmail.com`; valida que el texto no este vacio ni tenga espacios y muestra todos los usuarios encontrados.
 
 Compilar y ejecutar tests:
 

@@ -61,6 +61,31 @@ class PersistenciaInicialTest {
         }
     }
 
+    @Test
+    void buscaUsuarioPorIdYPorMailParcial() {
+        ConfiguracionTemporal configuracion = crearConfiguracionTemporal();
+
+        try (PersistenciaInicial persistenciaInicial = PersistenciaInicial.inicializar(
+                configuracion.archivoBase(),
+                configuracion.archivosBase(),
+                configuracion.jdbcUrl()
+        )) {
+            PersistenciaInicial.UsuarioResumen usuarioPorId = persistenciaInicial.buscarUsuarioPorId(48L)
+                    .orElseThrow();
+            List<PersistenciaInicial.UsuarioResumen> usuariosPorGmail = persistenciaInicial.buscarUsuariosPorMail("gmail");
+            List<PersistenciaInicial.UsuarioResumen> usuariosPorApellido = persistenciaInicial.buscarUsuariosPorMail("juarez");
+
+            assertEquals("Ana", usuarioPorId.nombre());
+            assertEquals("anagarcia@gmail.com", usuarioPorId.mail());
+            assertEquals(2, usuariosPorGmail.size());
+            assertEquals(1, usuariosPorApellido.size());
+            assertEquals(50L, usuariosPorApellido.get(0).id());
+            assertEquals("Bruno", usuariosPorApellido.get(0).nombre());
+            assertTrue(persistenciaInicial.buscarUsuarioPorId(999L).isEmpty());
+            assertTrue(persistenciaInicial.buscarUsuariosPorMail("noexiste").isEmpty());
+        }
+    }
+
     private ConfiguracionTemporal crearConfiguracionTemporal() {
         Path baseSinExtension = tempDir.resolve("jpa_db");
         Path archivoBase = tempDir.resolve("jpa_db.mv.db");

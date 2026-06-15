@@ -27,6 +27,14 @@ public class EntradaValidada {
         );
     }
 
+    public String leerTexto(
+            String prompt,
+            Predicate<String> validador,
+            String mensajeError
+    ) {
+        return leerTextoValidado(prompt, validador, mensajeError);
+    }
+
     public long leerLong(String prompt, Predicate<Long> validador, String mensajeError) {
         while (true) {
             String entrada = leerLinea(prompt);
