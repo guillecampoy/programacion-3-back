@@ -22,6 +22,30 @@ public class Producto extends Base {
     @ManyToOne
     private Categoria categoria;
 
+    public void setNombre(String nombre) {
+        this.nombre = requireNonBlank(nombre, "El nombre");
+    }
+
+    public void setPrecio(Double precio) {
+        this.precio = requirePositive(precio, "El precio");
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = requireNonBlank(descripcion, "La descripcion");
+    }
+
+    public void setStock(int stock) {
+        this.stock = requireMin(stock, 0, "El stock");
+    }
+
+    public void setImagen(String imagen) {
+        this.imagen = requireNonBlank(imagen, "La imagen");
+    }
+
+    public void setDisponible(Boolean disponible) {
+        this.disponible = requireNonNull(disponible, "La disponibilidad");
+    }
+
     public void setCategoria(Categoria categoria) {
         if (this.categoria == categoria) {
             return;

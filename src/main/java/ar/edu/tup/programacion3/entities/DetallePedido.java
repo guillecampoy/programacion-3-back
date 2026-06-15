@@ -18,4 +18,19 @@ public class DetallePedido extends Base {
     @ManyToOne
     private Producto producto;
 
+    public void setCantidad(int cantidad) {
+        this.cantidad = requireMin(cantidad, 1, "La cantidad");
+    }
+
+    public void setSubtotal(Double subtotal) {
+        requireNonNull(subtotal, "El subtotal");
+        if (subtotal < 0) {
+            throw new IllegalArgumentException("El subtotal debe ser mayor o igual a 0.");
+        }
+        this.subtotal = subtotal;
+    }
+
+    public void setProducto(Producto producto) {
+        this.producto = requireNonNull(producto, "El producto");
+    }
 }

@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RelacionesTest {
@@ -143,6 +144,44 @@ class RelacionesTest {
 
         assertNotEquals(cafe, otroCafe);
         assertEquals(2, productos.size());
+    }
+
+    @Test
+    void settersValidanDatosBasicosDeProducto() {
+        Producto producto = Producto.builder().build();
+
+        assertThrows(IllegalArgumentException.class, () -> producto.setId(0L));
+        assertThrows(IllegalArgumentException.class, () -> producto.setNombre(" "));
+        assertThrows(IllegalArgumentException.class, () -> producto.setPrecio(0.0));
+        assertThrows(IllegalArgumentException.class, () -> producto.setDescripcion(""));
+        assertThrows(IllegalArgumentException.class, () -> producto.setStock(-1));
+        assertThrows(IllegalArgumentException.class, () -> producto.setImagen(null));
+        assertThrows(IllegalArgumentException.class, () -> producto.setDisponible(null));
+
+        producto.setId(1L);
+        producto.setNombre(" Cafe molido ");
+        producto.setPrecio(3200.0);
+        producto.setDescripcion("Cafe tostado molido 500g");
+        producto.setStock(20);
+        producto.setImagen("cafe-molido.jpg");
+        producto.setDisponible(true);
+
+        assertEquals("Cafe molido", producto.getNombre());
+        assertEquals(3200.0, producto.getPrecio());
+        assertEquals(20, producto.getStock());
+    }
+
+    @Test
+    void pedidoValidaDatosBasicosAlAgregarDetalle() {
+        Pedido pedido = crearPedidoSinUsuario();
+        Producto productoSinPrecio = Producto.builder()
+                .nombre("Cafe molido")
+                .build();
+        Producto productoValido = crearProducto("Cafe molido", 3200.0);
+
+        assertThrows(IllegalArgumentException.class, () -> pedido.addDetallePedido(0, productoValido));
+        assertThrows(IllegalArgumentException.class, () -> pedido.addDetallePedido(1, null));
+        assertThrows(IllegalArgumentException.class, () -> pedido.addDetallePedido(1, productoSinPrecio));
     }
 
     private Pedido crearPedidoSinUsuario() {

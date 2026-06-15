@@ -40,6 +40,30 @@ public class Pedido extends Base implements Calculable {
     @JoinColumn(name = "pedido_id")
     private Set<DetallePedido> detallePedidos = new HashSet<>();
 
+    public void setFecha(LocalDate fecha) {
+        this.fecha = requireNonNull(fecha, "La fecha");
+    }
+
+    public void setEstado(Estado estado) {
+        this.estado = requireNonNull(estado, "El estado");
+    }
+
+    public void setTotal(Double total) {
+        requireNonNull(total, "El total");
+        if (total < 0) {
+            throw new IllegalArgumentException("El total debe ser mayor o igual a 0.");
+        }
+        this.total = total;
+    }
+
+    public void setFormaPago(FormaPago formaPago) {
+        this.formaPago = requireNonNull(formaPago, "La forma de pago");
+    }
+
+    public void setDetallePedidos(Set<DetallePedido> detallePedidos) {
+        this.detallePedidos = requireNonNull(detallePedidos, "Los detalles del pedido");
+        calcularTotal();
+    }
 
     public void setUsuario(Usuario usuario) {
         if (this.usuario == usuario) {
@@ -58,6 +82,10 @@ public class Pedido extends Base implements Calculable {
     }
 
     public void addDetallePedido(int cantidad, Producto producto) {
+        requireMin(cantidad, 1, "La cantidad");
+        requireNonNull(producto, "El producto");
+        requirePositive(producto.getPrecio(), "El precio del producto");
+
         DetallePedido detallePedido = DetallePedido.builder()
                 .producto(producto)
                 .cantidad(cantidad)
@@ -94,10 +122,10 @@ public class Pedido extends Base implements Calculable {
     }
 
     public Pedido(LocalDate fecha, Estado estado, FormaPago formaPago, Usuario usuario) {
-        this.fecha = fecha;
-        this.estado = estado;
-        this.total = 0.0;
-        this.formaPago = formaPago;
+        setFecha(fecha);
+        setEstado(estado);
+        setTotal(0.0);
+        setFormaPago(formaPago);
         this.usuario = usuario;
         this.detallePedidos = new HashSet<>();
         if (usuario != null) {

@@ -23,6 +23,18 @@ public class Categoria extends Base {
     @ToString.Exclude
     private Set<Producto> productos = new HashSet<>();
 
+    public void setNombre(String nombre) {
+        this.nombre = requireNonBlank(nombre, "El nombre");
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = requireNonBlank(descripcion, "La descripcion");
+    }
+
+    public void setProductos(Set<Producto> productos) {
+        this.productos = requireNonNull(productos, "Los productos");
+    }
+
     public void addProducto(Producto producto) {
         if (producto == null) {
             return;

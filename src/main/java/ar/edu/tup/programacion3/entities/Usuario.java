@@ -31,6 +31,38 @@ public class Usuario extends Base {
     @ToString.Exclude
     private Set<Pedido> pedidos = new HashSet<>();
 
+    public void setNombre(String nombre) {
+        this.nombre = requireNonBlank(nombre, "El nombre");
+    }
+
+    public void setApellido(String apellido) {
+        this.apellido = requireNonBlank(apellido, "El apellido");
+    }
+
+    public void setMail(String mail) {
+        String mailNormalizado = requireNonBlank(mail, "El mail");
+        if (!mailNormalizado.contains("@")) {
+            throw new IllegalArgumentException("El mail debe contener @.");
+        }
+        this.mail = mailNormalizado;
+    }
+
+    public void setCelular(String celular) {
+        this.celular = requireNonBlank(celular, "El celular");
+    }
+
+    public void setContrasenia(String contrasenia) {
+        this.contrasenia = requireNonBlank(contrasenia, "La contrasenia");
+    }
+
+    public void setRol(Rol rol) {
+        this.rol = requireNonNull(rol, "El rol");
+    }
+
+    public void setPedidos(Set<Pedido> pedidos) {
+        this.pedidos = requireNonNull(pedidos, "Los pedidos");
+    }
+
     public void addPedido(Pedido pedido) {
         if (pedido == null) {
             return;
