@@ -12,6 +12,9 @@ import java.util.function.BiFunction;
 
 public class Main {
     private static final String JDBC_H2_LOCAL = "jdbc:h2:file:./data/jpa_db;AUTO_SERVER=TRUE";
+    private static final String SEPARADOR_MENU = "------------------------------------------------------------";
+    private static final String PREFIJO_MENSAJE = "  > ";
+    private static final String PREFIJO_ERROR = "  ! ";
     private static final int CANTIDAD_PRODUCTOS_A_ACTUALIZAR = 2;
     private static final List<CampoProductoEditable> CAMPOS_PRODUCTO_EDITABLES = List.of(
             new CampoProductoEditable("1", "Nombre", Main::leerActualizacionNombre),
@@ -35,7 +38,7 @@ public class Main {
                 mostrarMenu();
                 String opcion;
                 try {
-                    opcion = entradaValidada.leerOpcion("Opcion: ", Set.of("0", "1", "2", "3", "4", "5", "6", "7", "8"));
+                    opcion = entradaValidada.leerOpcion(prompt("Seleccione opcion"), Set.of("0", "1", "2", "3", "4", "5", "6", "7", "8"));
                 } catch (IllegalStateException exception) {
                     break;
                 }
@@ -48,7 +51,7 @@ public class Main {
                         PersistenciaInicial.borrarBaseLocal();
                         persistenciaInicial = PersistenciaInicial.inicializar();
                         h2LocalConsole = H2LocalConsole.iniciar();
-                        System.out.println("Base local borrada y semilla persistida nuevamente.");
+                        imprimirMensaje("Base local borrada y semilla persistida nuevamente.");
                         mostrarEstado(persistenciaInicial, h2LocalConsole);
                     }
                     case "3" -> actualizarDosProductos(persistenciaInicial, entradaValidada);
@@ -70,40 +73,79 @@ public class Main {
     private static void mostrarEstado(PersistenciaInicial persistenciaInicial, H2LocalConsole h2LocalConsole) {
         PersistenciaInicial.ResumenPersistencia resumen = persistenciaInicial.contarDatos();
 
-        System.out.println();
-        System.out.println("=== TP JPA ===");
-        System.out.println("BD local existente al iniciar: " + (persistenciaInicial.isBaseLocalExistia() ? "si" : "no"));
-        System.out.println("Datos iniciales persistidos: " + (persistenciaInicial.isDatosInicialesPersistidos() ? "si" : "no"));
-        System.out.println("Usuarios: " + resumen.usuarios());
-        System.out.println("Categorias: " + resumen.categorias());
-        System.out.println("Productos activos: " + resumen.productosActivos());
-        System.out.println("Productos eliminados: " + resumen.productosEliminados());
-        System.out.println("Pedidos: " + resumen.pedidos());
-        System.out.println("Consola H2: " + h2LocalConsole.getUrl());
-        System.out.println("JDBC URL: " + JDBC_H2_LOCAL);
-        System.out.println("Usuario: sa");
-        System.out.println("Password: <vacio>");
+        imprimirTitulo("ESTADO GENERAL");
+        imprimirDato("BD local existente al iniciar", persistenciaInicial.isBaseLocalExistia() ? "si" : "no");
+        imprimirDato("Datos iniciales persistidos", persistenciaInicial.isDatosInicialesPersistidos() ? "si" : "no");
+        imprimirDato("Usuarios", resumen.usuarios());
+        imprimirDato("Categorias", resumen.categorias());
+        imprimirDato("Productos activos", resumen.productosActivos());
+        imprimirDato("Productos eliminados", resumen.productosEliminados());
+        imprimirDato("Pedidos", resumen.pedidos());
+        imprimirDato("Consola H2", h2LocalConsole.getUrl());
+        imprimirDato("JDBC URL", JDBC_H2_LOCAL);
+        imprimirDato("Usuario", "sa");
+        imprimirDato("Password", "<vacio>");
+        System.out.println(SEPARADOR_MENU);
     }
 
     private static void mostrarMenu() {
         System.out.println();
-        System.out.println("1 - Mostrar estado");
-        System.out.println("2 - Borrar base local y reinstanciar semilla");
-        System.out.println("3 - Actualizar " + CANTIDAD_PRODUCTOS_A_ACTUALIZAR + " productos");
-        System.out.println("4 - Buscar usuario por id");
-        System.out.println("5 - Buscar usuario por mail parcial");
-        System.out.println("6 - Borrar 1 producto");
-        System.out.println("7 - Listar productos con borrado logico");
-        System.out.println("8 - Revertir borrado logico de producto");
-        System.out.println("0 - Salir");
+        System.out.println(SEPARADOR_MENU);
+        System.out.println("MENU PRINCIPAL");
+        System.out.println(SEPARADOR_MENU);
+        imprimirOpcionMenu("1", "Mostrar estado");
+        imprimirOpcionMenu("2", "Borrar base local y reinstanciar semilla");
+        imprimirOpcionMenu("3", "Actualizar " + CANTIDAD_PRODUCTOS_A_ACTUALIZAR + " productos");
+        imprimirOpcionMenu("4", "Buscar usuario por id");
+        imprimirOpcionMenu("5", "Buscar usuario por mail parcial");
+        imprimirOpcionMenu("6", "Borrar 1 producto");
+        imprimirOpcionMenu("7", "Listar productos con borrado logico");
+        imprimirOpcionMenu("8", "Revertir borrado logico de producto");
+        System.out.println(SEPARADOR_MENU);
+        imprimirOpcionMenu("0", "Salir");
+        System.out.println(SEPARADOR_MENU);
+    }
+
+    private static void imprimirOpcionMenu(String opcion, String descripcion) {
+        System.out.printf("  %s) %-50s%n", opcion, descripcion);
+    }
+
+    private static void imprimirTitulo(String titulo) {
+        System.out.println();
+        System.out.println(SEPARADOR_MENU);
+        System.out.println(titulo);
+        System.out.println(SEPARADOR_MENU);
+    }
+
+    private static void imprimirSubtitulo(String titulo) {
+        System.out.println();
+        System.out.println(titulo);
+        System.out.println(SEPARADOR_MENU);
+    }
+
+    private static void imprimirDato(String etiqueta, Object valor) {
+        System.out.printf("  %-35s %s%n", etiqueta + ":", valor);
+    }
+
+    private static void imprimirMensaje(String mensaje) {
+        System.out.println(PREFIJO_MENSAJE + mensaje);
+    }
+
+    private static void imprimirError(String mensaje) {
+        System.out.println(PREFIJO_ERROR + mensaje);
+    }
+
+    private static String prompt(String etiqueta) {
+        return PREFIJO_MENSAJE + etiqueta + ": ";
     }
 
     private static void buscarUsuarioPorId(
             PersistenciaInicial persistenciaInicial,
             EntradaValidada entradaValidada
     ) {
+        imprimirTitulo("BUSQUEDA DE USUARIO POR ID");
         long usuarioId = entradaValidada.leerLong(
-                "Id de usuario: ",
+                prompt("Id de usuario"),
                 id -> id > 0,
                 "Ingrese un id numerico mayor a 0."
         );
@@ -114,8 +156,9 @@ public class Main {
             PersistenciaInicial persistenciaInicial,
             EntradaValidada entradaValidada
     ) {
+        imprimirTitulo("BUSQUEDA DE USUARIO POR MAIL");
         String mailParcial = entradaValidada.leerTexto(
-                "Texto a buscar en mail: ",
+                prompt("Texto a buscar en mail"),
                 entrada -> !entrada.isBlank() && !entrada.matches(".*\\s+.*"),
                 "Ingrese un texto no vacio y sin espacios."
         );
@@ -124,20 +167,21 @@ public class Main {
 
     private static void mostrarResultadoUsuario(Optional<PersistenciaInicial.UsuarioResumen> usuario) {
         if (usuario.isEmpty()) {
-            System.out.println("Usuario no encontrado.");
+            imprimirMensaje("Usuario no encontrado.");
             return;
         }
-        System.out.println("Usuario encontrado: " + formatearUsuario(usuario.get()));
+        imprimirSubtitulo("RESULTADO");
+        imprimirUsuario(usuario.get());
     }
 
     private static void mostrarResultadoUsuarios(List<PersistenciaInicial.UsuarioResumen> usuarios) {
         if (usuarios.isEmpty()) {
-            System.out.println("No se encontraron usuarios.");
+            imprimirMensaje("No se encontraron usuarios.");
             return;
         }
 
-        System.out.println("Usuarios encontrados:");
-        usuarios.forEach(usuario -> System.out.println(formatearUsuario(usuario)));
+        imprimirSubtitulo("USUARIOS ENCONTRADOS");
+        mostrarUsuarios(usuarios);
     }
 
     private static void borrarProducto(
@@ -146,32 +190,34 @@ public class Main {
     ) {
         List<PersistenciaInicial.ProductoResumen> productos = persistenciaInicial.listarProductos();
         if (productos.isEmpty()) {
-            System.out.println("No hay productos activos para borrar.");
+            imprimirMensaje("No hay productos activos para borrar.");
             return;
         }
 
+        imprimirTitulo("BORRADO LOGICO DE PRODUCTO");
         Set<Long> idsValidos = new HashSet<>();
         productos.forEach(producto -> idsValidos.add(producto.id()));
         mostrarProductos(productos);
 
         long productoId = entradaValidada.leerLong(
-                "Id de producto a borrar: ",
+                prompt("Id de producto a borrar"),
                 idsValidos::contains,
                 "Ingrese un id de producto activo existente."
         );
         PersistenciaInicial.ProductoResumen productoBorrado = persistenciaInicial.borrarProducto(productoId);
 
-        System.out.println("Producto borrado logicamente: " + formatearProducto(productoBorrado));
+        imprimirSubtitulo("PRODUCTO BORRADO LOGICAMENTE");
+        imprimirProducto(productoBorrado);
     }
 
     private static void listarProductosEliminados(PersistenciaInicial persistenciaInicial) {
         List<PersistenciaInicial.ProductoResumen> productosEliminados = persistenciaInicial.listarProductosEliminados();
         if (productosEliminados.isEmpty()) {
-            System.out.println("No hay productos con borrado logico.");
+            imprimirMensaje("No hay productos con borrado logico.");
             return;
         }
 
-        System.out.println("Productos con borrado logico:");
+        imprimirTitulo("PRODUCTOS CON BORRADO LOGICO");
         mostrarProductos(productosEliminados);
     }
 
@@ -181,22 +227,24 @@ public class Main {
     ) {
         List<PersistenciaInicial.ProductoResumen> productosEliminados = persistenciaInicial.listarProductosEliminados();
         if (productosEliminados.isEmpty()) {
-            System.out.println("No hay productos con borrado logico para restaurar.");
+            imprimirMensaje("No hay productos con borrado logico para restaurar.");
             return;
         }
 
+        imprimirTitulo("REVERTIR BORRADO LOGICO");
         Set<Long> idsValidos = new HashSet<>();
         productosEliminados.forEach(producto -> idsValidos.add(producto.id()));
         mostrarProductos(productosEliminados);
 
         long productoId = entradaValidada.leerLong(
-                "Id de producto a restaurar: ",
+                prompt("Id de producto a restaurar"),
                 idsValidos::contains,
                 "Ingrese un id de producto eliminado existente."
         );
         PersistenciaInicial.ProductoResumen productoRestaurado = persistenciaInicial.restaurarProducto(productoId);
 
-        System.out.println("Producto restaurado: " + formatearProducto(productoRestaurado));
+        imprimirSubtitulo("PRODUCTO RESTAURADO");
+        imprimirProducto(productoRestaurado);
     }
 
     private static void actualizarDosProductos(
@@ -205,26 +253,27 @@ public class Main {
     ) {
         List<PersistenciaInicial.ProductoResumen> productos = persistenciaInicial.listarProductos();
         if (productos.size() < CANTIDAD_PRODUCTOS_A_ACTUALIZAR) {
-            System.out.println("Debe haber al menos " + CANTIDAD_PRODUCTOS_A_ACTUALIZAR + " productos para ejecutar esta opcion.");
+            imprimirError("Debe haber al menos " + CANTIDAD_PRODUCTOS_A_ACTUALIZAR + " productos para ejecutar esta opcion.");
             return;
         }
 
+        imprimirTitulo("ACTUALIZACION DE PRODUCTOS");
         Set<Long> idsValidos = new HashSet<>();
         productos.forEach(producto -> idsValidos.add(producto.id()));
 
         Set<Long> idsActualizados = new HashSet<>();
         for (int i = 1; i <= CANTIDAD_PRODUCTOS_A_ACTUALIZAR; i++) {
-            System.out.println();
-            System.out.println("Producto " + i + " de " + CANTIDAD_PRODUCTOS_A_ACTUALIZAR);
+            imprimirSubtitulo("PRODUCTO " + i + " DE " + CANTIDAD_PRODUCTOS_A_ACTUALIZAR);
             mostrarProductos(productos);
 
             long productoId = entradaValidada.leerLong(
-                    "Id de producto: ",
+                    prompt("Id de producto"),
                     id -> idsValidos.contains(id) && !idsActualizados.contains(id),
                     "Ingrese un id de producto existente y no repetido."
             );
             PersistenciaInicial.ProductoResumen productoSeleccionado = buscarProducto(productos, productoId);
-            System.out.println("Seleccionado: " + formatearProducto(productoSeleccionado));
+            imprimirSubtitulo("PRODUCTO SELECCIONADO");
+            imprimirProducto(productoSeleccionado);
 
             CampoProductoEditable campo = leerCampoProductoEditable(entradaValidada);
             PersistenciaInicial.ProductoActualizacion actualizacion = campo.leerActualizacion(
@@ -235,19 +284,20 @@ public class Main {
             idsActualizados.add(productoId);
             productos = persistenciaInicial.listarProductos();
 
-            System.out.println("Producto actualizado: " + formatearProducto(productoActualizado));
+            imprimirSubtitulo("PRODUCTO ACTUALIZADO");
+            imprimirProducto(productoActualizado);
         }
     }
 
     private static CampoProductoEditable leerCampoProductoEditable(EntradaValidada entradaValidada) {
-        System.out.println("Campo a editar:");
+        imprimirSubtitulo("CAMPO A EDITAR");
         CAMPOS_PRODUCTO_EDITABLES.forEach(campo ->
-                System.out.println(campo.opcion() + " - " + campo.nombre())
+                imprimirOpcionMenu(campo.opcion(), campo.nombre())
         );
         Set<String> opciones = new HashSet<>();
         CAMPOS_PRODUCTO_EDITABLES.forEach(campo -> opciones.add(campo.opcion()));
 
-        String opcion = entradaValidada.leerOpcion("Campo: ", opciones);
+        String opcion = entradaValidada.leerOpcion(prompt("Campo"), opciones);
         return CAMPOS_PRODUCTO_EDITABLES.stream()
                 .filter(campo -> campo.opcion().equals(opcion))
                 .findFirst()
@@ -268,10 +318,10 @@ public class Main {
             EntradaValidada entradaValidada,
             ContextoActualizacion contexto
     ) {
-        System.out.println("Actual: " + contexto.producto().nombre());
+        imprimirDato("Valor actual", contexto.producto().nombre());
         return PersistenciaInicial.ProductoActualizacion.nombre(
                 contexto.producto().id(),
-                entradaValidada.leerTextoNoVacio("Nuevo nombre: ")
+                entradaValidada.leerTextoNoVacio(prompt("Nuevo nombre"))
         );
     }
 
@@ -279,10 +329,10 @@ public class Main {
             EntradaValidada entradaValidada,
             ContextoActualizacion contexto
     ) {
-        System.out.println("Actual: " + contexto.producto().precio());
+        imprimirDato("Valor actual", contexto.producto().precio());
         return PersistenciaInicial.ProductoActualizacion.precio(
                 contexto.producto().id(),
-                entradaValidada.leerDecimal("Nuevo precio: ", 0.01)
+                entradaValidada.leerDecimal(prompt("Nuevo precio"), 0.01)
         );
     }
 
@@ -290,10 +340,10 @@ public class Main {
             EntradaValidada entradaValidada,
             ContextoActualizacion contexto
     ) {
-        System.out.println("Actual: " + contexto.producto().descripcion());
+        imprimirDato("Valor actual", contexto.producto().descripcion());
         return PersistenciaInicial.ProductoActualizacion.descripcion(
                 contexto.producto().id(),
-                entradaValidada.leerTextoNoVacio("Nueva descripcion: ")
+                entradaValidada.leerTextoNoVacio(prompt("Nueva descripcion"))
         );
     }
 
@@ -301,10 +351,10 @@ public class Main {
             EntradaValidada entradaValidada,
             ContextoActualizacion contexto
     ) {
-        System.out.println("Actual: " + contexto.producto().stock());
+        imprimirDato("Valor actual", contexto.producto().stock());
         return PersistenciaInicial.ProductoActualizacion.stock(
                 contexto.producto().id(),
-                entradaValidada.leerEntero("Nuevo stock: ", 0)
+                entradaValidada.leerEntero(prompt("Nuevo stock"), 0)
         );
     }
 
@@ -312,10 +362,10 @@ public class Main {
             EntradaValidada entradaValidada,
             ContextoActualizacion contexto
     ) {
-        System.out.println("Actual: " + contexto.producto().imagen());
+        imprimirDato("Valor actual", contexto.producto().imagen());
         return PersistenciaInicial.ProductoActualizacion.imagen(
                 contexto.producto().id(),
-                entradaValidada.leerTextoNoVacio("Nueva imagen: ")
+                entradaValidada.leerTextoNoVacio(prompt("Nueva imagen"))
         );
     }
 
@@ -323,10 +373,10 @@ public class Main {
             EntradaValidada entradaValidada,
             ContextoActualizacion contexto
     ) {
-        System.out.println("Actual: " + (Boolean.TRUE.equals(contexto.producto().disponible()) ? "si" : "no"));
+        imprimirDato("Valor actual", Boolean.TRUE.equals(contexto.producto().disponible()) ? "si" : "no");
         return PersistenciaInicial.ProductoActualizacion.disponible(
                 contexto.producto().id(),
-                entradaValidada.leerBooleano("Disponible (si/no): ")
+                entradaValidada.leerBooleano(prompt("Disponible (si/no)"))
         );
     }
 
@@ -336,14 +386,15 @@ public class Main {
     ) {
         List<PersistenciaInicial.CategoriaResumen> categorias = contexto.persistenciaInicial().listarCategorias();
         Set<Long> idsCategorias = new HashSet<>();
+        imprimirSubtitulo("CATEGORIAS DISPONIBLES");
         categorias.forEach(categoria -> {
             idsCategorias.add(categoria.id());
-            System.out.println(categoria.id() + " - " + categoria.nombre());
+            imprimirOpcionMenu(String.valueOf(categoria.id()), categoria.nombre());
         });
 
-        System.out.println("Actual: " + contexto.producto().categoria());
+        imprimirDato("Valor actual", contexto.producto().categoria());
         long categoriaId = entradaValidada.leerLong(
-                "Nueva categoria id: ",
+                prompt("Nueva categoria id"),
                 idsCategorias::contains,
                 "Ingrese un id de categoria existente."
         );
@@ -351,7 +402,19 @@ public class Main {
     }
 
     private static void mostrarProductos(List<PersistenciaInicial.ProductoResumen> productos) {
-        productos.forEach(producto -> System.out.println(formatearProducto(producto)));
+        productos.forEach(Main::imprimirProducto);
+    }
+
+    private static void mostrarUsuarios(List<PersistenciaInicial.UsuarioResumen> usuarios) {
+        usuarios.forEach(Main::imprimirUsuario);
+    }
+
+    private static void imprimirProducto(PersistenciaInicial.ProductoResumen producto) {
+        System.out.println("  - " + formatearProducto(producto));
+    }
+
+    private static void imprimirUsuario(PersistenciaInicial.UsuarioResumen usuario) {
+        System.out.println("  - " + formatearUsuario(usuario));
     }
 
     private static String formatearProducto(PersistenciaInicial.ProductoResumen producto) {

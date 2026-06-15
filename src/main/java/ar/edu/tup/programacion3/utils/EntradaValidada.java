@@ -5,6 +5,8 @@ import java.util.Scanner;
 import java.util.function.Predicate;
 
 public class EntradaValidada {
+    private static final String PREFIJO_ERROR = "  ! ";
+
     private final Scanner scanner;
 
     public EntradaValidada(Scanner scanner) {
@@ -39,7 +41,7 @@ public class EntradaValidada {
         while (true) {
             String entrada = leerLinea(prompt);
             if (!entrada.matches("\\d+")) {
-                System.out.println(mensajeError);
+                imprimirError(mensajeError);
                 continue;
             }
 
@@ -47,14 +49,14 @@ public class EntradaValidada {
             try {
                 valor = Long.parseLong(entrada);
             } catch (NumberFormatException exception) {
-                System.out.println(mensajeError);
+                imprimirError(mensajeError);
                 continue;
             }
 
             if (validador.test(valor)) {
                 return valor;
             }
-            System.out.println(mensajeError);
+            imprimirError(mensajeError);
         }
     }
 
@@ -62,7 +64,7 @@ public class EntradaValidada {
         while (true) {
             String entrada = leerLinea(prompt);
             if (!entrada.matches("\\d+")) {
-                System.out.println("Ingrese un numero entero mayor o igual a " + minimo + ".");
+                imprimirError("Ingrese un numero entero mayor o igual a " + minimo + ".");
                 continue;
             }
 
@@ -70,14 +72,14 @@ public class EntradaValidada {
             try {
                 valor = Integer.parseInt(entrada);
             } catch (NumberFormatException exception) {
-                System.out.println("Ingrese un numero entero mayor o igual a " + minimo + ".");
+                imprimirError("Ingrese un numero entero mayor o igual a " + minimo + ".");
                 continue;
             }
 
             if (valor >= minimo) {
                 return valor;
             }
-            System.out.println("Ingrese un numero entero mayor o igual a " + minimo + ".");
+            imprimirError("Ingrese un numero entero mayor o igual a " + minimo + ".");
         }
     }
 
@@ -85,7 +87,7 @@ public class EntradaValidada {
         while (true) {
             String entrada = leerLinea(prompt);
             if (!entrada.matches("\\d+(\\.\\d+)?")) {
-                System.out.println("Ingrese un numero decimal mayor o igual a " + minimo + ".");
+                imprimirError("Ingrese un numero decimal mayor o igual a " + minimo + ".");
                 continue;
             }
 
@@ -93,14 +95,14 @@ public class EntradaValidada {
             try {
                 valor = Double.parseDouble(entrada);
             } catch (NumberFormatException exception) {
-                System.out.println("Ingrese un numero decimal mayor o igual a " + minimo + ".");
+                imprimirError("Ingrese un numero decimal mayor o igual a " + minimo + ".");
                 continue;
             }
 
             if (valor >= minimo) {
                 return valor;
             }
-            System.out.println("Ingrese un numero decimal mayor o igual a " + minimo + ".");
+            imprimirError("Ingrese un numero decimal mayor o igual a " + minimo + ".");
         }
     }
 
@@ -113,7 +115,7 @@ public class EntradaValidada {
             if (Set.of("n", "no", "false").contains(entrada)) {
                 return false;
             }
-            System.out.println("Ingrese si/no, s/n o true/false.");
+            imprimirError("Ingrese si/no, s/n o true/false.");
         }
     }
 
@@ -127,7 +129,7 @@ public class EntradaValidada {
             if (validador.test(entrada)) {
                 return entrada;
             }
-            System.out.println(mensajeError);
+            imprimirError(mensajeError);
         }
     }
 
@@ -137,5 +139,9 @@ public class EntradaValidada {
             throw new IllegalStateException("No hay mas entrada disponible.");
         }
         return scanner.nextLine().trim();
+    }
+
+    private void imprimirError(String mensaje) {
+        System.out.println(PREFIJO_ERROR + mensaje);
     }
 }
