@@ -98,6 +98,43 @@ class RelacionesTest {
     }
 
     @Test
+    void detallePedidoUsaProductoComoIdentidadLogica() {
+        Producto producto = Producto.builder()
+                .id(1L)
+                .nombre("Cafe molido")
+                .precio(3200.0)
+                .build();
+        DetallePedido detalle = DetallePedido.builder()
+                .producto(producto)
+                .cantidad(1)
+                .subtotal(3200.0)
+                .build();
+        DetallePedido mismoProductoConOtraCantidad = DetallePedido.builder()
+                .producto(producto)
+                .cantidad(3)
+                .subtotal(9600.0)
+                .build();
+
+        assertEquals(detalle, mismoProductoConOtraCantidad);
+        assertEquals(detalle.hashCode(), mismoProductoConOtraCantidad.hashCode());
+    }
+
+    @Test
+    void pedidoAgrupaDetallesDelMismoProducto() {
+        Pedido pedido = crearPedidoSinUsuario();
+        Producto producto = crearProducto("Cafe molido", 3200.0);
+
+        pedido.addDetallePedido(1, producto);
+        pedido.addDetallePedido(2, producto);
+
+        DetallePedido detallePedido = pedido.findDetallePedidoByProducto(producto);
+        assertEquals(1, pedido.getDetallePedidos().size());
+        assertEquals(3, detallePedido.getCantidad());
+        assertEquals(9600.0, detallePedido.getSubtotal());
+        assertEquals(9600.0, pedido.getTotal());
+    }
+
+    @Test
     void datosSemillaMantienenRelacionesDelDiagrama() {
         DatosSemilla datosSemilla = DatosSemillaFactory.crear();
 

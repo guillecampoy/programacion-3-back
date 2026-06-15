@@ -86,6 +86,15 @@ public class Pedido extends Base implements Calculable {
         requireNonNull(producto, "El producto");
         requirePositive(producto.getPrecio(), "El precio del producto");
 
+        DetallePedido detallePedidoExistente = findDetallePedidoByProducto(producto);
+        if (detallePedidoExistente != null) {
+            int nuevaCantidad = detallePedidoExistente.getCantidad() + cantidad;
+            detallePedidoExistente.setCantidad(nuevaCantidad);
+            detallePedidoExistente.setSubtotal(producto.getPrecio() * nuevaCantidad);
+            calcularTotal();
+            return;
+        }
+
         DetallePedido detallePedido = DetallePedido.builder()
                 .producto(producto)
                 .cantidad(cantidad)

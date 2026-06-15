@@ -5,6 +5,8 @@ import jakarta.persistence.ManyToOne;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Objects;
+
 @Entity
 @Getter
 @Setter
@@ -32,5 +34,22 @@ public class DetallePedido extends Base {
 
     public void setProducto(Producto producto) {
         this.producto = requireNonNull(producto, "El producto");
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof DetallePedido detallePedido)) {
+            return false;
+        }
+
+        return producto != null && Objects.equals(producto, detallePedido.producto);
+    }
+
+    @Override
+    public int hashCode() {
+        return producto == null ? System.identityHashCode(this) : producto.hashCode();
     }
 }
