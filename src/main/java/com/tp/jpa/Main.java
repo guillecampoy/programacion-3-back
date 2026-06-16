@@ -51,11 +51,25 @@ public class Main {
         boolean salir = false;
         while (!salir) {
             mostrarMenuPrincipal();
-            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
             switch (opcion) {
                 case "1" -> menuCategorias();
                 case "2" -> menuProductos();
+                case "3" -> menuReportes();
                 case "0" -> salir = true;
+                default -> imprimirError("Opcion invalida.");
+            }
+        }
+    }
+
+    private void menuReportes() {
+        boolean volver = false;
+        while (!volver) {
+            mostrarMenuReportes();
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1"));
+            switch (opcion) {
+                case "1" -> productosPorCategoria();
+                case "0" -> volver = true;
                 default -> imprimirError("Opcion invalida.");
             }
         }
@@ -89,6 +103,39 @@ public class Main {
                 default -> imprimirError("Opcion invalida.");
             }
         }
+    }
+
+    private void productosPorCategoria() {
+        imprimirTitulo("Productos por categoria");
+        List<Categoria> categorias = categoriaRepository.listarActivos();
+        if (categorias.isEmpty()) {
+            imprimirMensaje("No hay categorias activas disponibles.");
+            return;
+        }
+
+        categorias.forEach(this::imprimirCategoria);
+        Set<Long> idsValidos = categorias.stream()
+                .map(Categoria::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        long categoriaId = entrada.leerLong(
+                prompt("Seleccione ID de categoria"),
+                idsValidos::contains,
+                "Error: no existe una categoria activa con el ID indicado."
+        );
+        Categoria categoria = categoriaRepository.buscarPorId(categoriaId).orElse(null);
+        if (categoria == null || Boolean.TRUE.equals(categoria.getEliminado())) {
+            imprimirError("Error: no existe una categoria activa con el ID indicado.");
+            return;
+        }
+
+        List<Producto> productos = productoRepository.buscarPorCategoria(categoriaId);
+        if (productos.isEmpty()) {
+            imprimirMensaje("No hay productos activos para la categoria seleccionada.");
+            return;
+        }
+
+        System.out.println("Productos activos de la categoria " + categoria.getNombre() + ":");
+        productos.forEach(this::imprimirProductoReporte);
     }
 
     private void modificarProducto() {
@@ -376,6 +423,13 @@ public class Main {
                 + " | Categoria: " + categoria);
     }
 
+    private void imprimirProductoReporte(Producto producto) {
+        System.out.println("ID: " + producto.getId()
+                + " | Nombre: " + producto.getNombre()
+                + " | Precio: " + producto.getPrecio()
+                + " | Stock: " + producto.getStock());
+    }
+
     private long generarId() {
         return System.currentTimeMillis();
     }
@@ -387,6 +441,7 @@ public class Main {
         System.out.println(SEPARADOR);
         imprimirOpcion("1", "Categorias");
         imprimirOpcion("2", "Productos");
+        imprimirOpcion("3", "Reportes");
         imprimirOpcion("0", "Salir");
         System.out.println(SEPARADOR);
     }
@@ -411,6 +466,16 @@ public class Main {
         imprimirOpcion("1", "Alta de producto");
         imprimirOpcion("2", "Modificar producto");
         imprimirOpcion("3", "Baja logica de producto");
+        imprimirOpcion("0", "Volver");
+        System.out.println(SEPARADOR);
+    }
+
+    private void mostrarMenuReportes() {
+        System.out.println();
+        System.out.println(SEPARADOR);
+        System.out.println("Reportes");
+        System.out.println(SEPARADOR);
+        imprimirOpcion("1", "Productos por categoria");
         imprimirOpcion("0", "Volver");
         System.out.println(SEPARADOR);
     }
