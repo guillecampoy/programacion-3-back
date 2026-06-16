@@ -59,10 +59,11 @@ public class Main {
         boolean volver = false;
         while (!volver) {
             mostrarMenuCategorias();
-            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
             switch (opcion) {
                 case "1" -> altaCategoria();
                 case "2" -> modificarCategoria();
+                case "3" -> bajaCategoria();
                 case "0" -> volver = true;
                 default -> imprimirError("Opcion invalida.");
             }
@@ -142,6 +143,30 @@ public class Main {
         }
     }
 
+    private void bajaCategoria() {
+        imprimirTitulo("Baja logica de categoria");
+        long id = entrada.leerLong(
+                prompt("Ingrese ID de categoria"),
+                valor -> valor > 0,
+                "Error: ingrese un ID numerico mayor a 0."
+        );
+
+        Categoria categoria = categoriaRepository.buscarPorId(id).orElse(null);
+        if (categoria == null) {
+            imprimirError("Error: no existe una categoria activa con el ID indicado.");
+            return;
+        }
+        if (Boolean.TRUE.equals(categoria.getEliminado())) {
+            imprimirError("Error: la categoria ya se encuentra dada de baja.");
+            return;
+        }
+
+        String nombre = categoria.getNombre();
+        if (categoriaRepository.eliminarLogico(id)) {
+            imprimirMensaje("Categoria dada de baja correctamente: " + nombre);
+        }
+    }
+
     private String leerLinea(String prompt) {
         if (scanner == null) {
             return "";
@@ -180,6 +205,7 @@ public class Main {
         System.out.println(SEPARADOR);
         imprimirOpcion("1", "Alta de categoria");
         imprimirOpcion("2", "Modificar categoria");
+        imprimirOpcion("3", "Baja logica de categoria");
         imprimirOpcion("0", "Volver");
         System.out.println(SEPARADOR);
     }
