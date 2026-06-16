@@ -65,9 +65,10 @@ public class Main {
         boolean volver = false;
         while (!volver) {
             mostrarMenuProductos();
-            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1"));
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
             switch (opcion) {
                 case "1" -> altaProducto();
+                case "2" -> modificarProducto();
                 case "0" -> volver = true;
                 default -> imprimirError("Opcion invalida.");
             }
@@ -86,6 +87,83 @@ public class Main {
                 case "0" -> volver = true;
                 default -> imprimirError("Opcion invalida.");
             }
+        }
+    }
+
+    private void modificarProducto() {
+        imprimirTitulo("Modificar producto");
+        List<Producto> productos = productoRepository.listarActivos();
+        if (productos.isEmpty()) {
+            imprimirMensaje("No hay productos activos para modificar.");
+            return;
+        }
+
+        productos.forEach(this::imprimirProducto);
+        Set<Long> idsValidos = productos.stream()
+                .map(Producto::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        long id = entrada.leerLong(
+                prompt("Ingrese ID de producto"),
+                idsValidos::contains,
+                "Error: no existe un producto activo con el ID indicado."
+        );
+
+        Producto producto = productoRepository.buscarPorId(id).orElse(null);
+        if (producto == null || Boolean.TRUE.equals(producto.getEliminado())) {
+            imprimirError("Error: no existe un producto activo con el ID indicado.");
+            return;
+        }
+
+        System.out.println("Valores actuales:");
+        System.out.println("Nombre actual: " + producto.getNombre());
+        System.out.println("Precio actual: " + producto.getPrecio());
+        System.out.println("Stock actual: " + producto.getStock());
+
+        String nombre = leerLinea(prompt("Nuevo nombre (enter para conservar)"));
+        String precioTexto = leerLinea(prompt("Nuevo precio (enter para conservar)"));
+        String stockTexto = leerLinea(prompt("Nuevo stock (enter para conservar)"));
+
+        Double nuevoPrecio = null;
+        Integer nuevoStock = null;
+        if (!precioTexto.isBlank()) {
+            try {
+                nuevoPrecio = Double.parseDouble(precioTexto.trim());
+            } catch (NumberFormatException exception) {
+                imprimirError("Error: el precio debe ser mayor a 0.");
+                return;
+            }
+            if (nuevoPrecio <= 0) {
+                imprimirError("Error: el precio debe ser mayor a 0.");
+                return;
+            }
+        }
+        if (!stockTexto.isBlank()) {
+            try {
+                nuevoStock = Integer.parseInt(stockTexto.trim());
+            } catch (NumberFormatException exception) {
+                imprimirError("Error: el stock debe ser mayor o igual a 0.");
+                return;
+            }
+            if (nuevoStock < 0) {
+                imprimirError("Error: el stock debe ser mayor o igual a 0.");
+                return;
+            }
+        }
+
+        try {
+            if (!nombre.isBlank()) {
+                producto.setNombre(nombre.trim());
+            }
+            if (nuevoPrecio != null) {
+                producto.setPrecio(nuevoPrecio);
+            }
+            if (nuevoStock != null) {
+                producto.setStock(nuevoStock);
+            }
+            productoRepository.guardar(producto);
+            imprimirMensaje("Producto modificado correctamente.");
+        } catch (RuntimeException exception) {
+            imprimirError("No se modifico el producto: " + exception.getMessage());
         }
     }
 
@@ -264,6 +342,15 @@ public class Main {
                 + " | Descripcion: " + categoria.getDescripcion());
     }
 
+    private void imprimirProducto(Producto producto) {
+        String categoria = producto.getCategoria() == null ? "" : producto.getCategoria().getNombre();
+        System.out.println("ID: " + producto.getId()
+                + " | Nombre: " + producto.getNombre()
+                + " | Precio: " + producto.getPrecio()
+                + " | Stock: " + producto.getStock()
+                + " | Categoria: " + categoria);
+    }
+
     private long generarId() {
         return System.currentTimeMillis();
     }
@@ -297,6 +384,7 @@ public class Main {
         System.out.println("Productos");
         System.out.println(SEPARADOR);
         imprimirOpcion("1", "Alta de producto");
+        imprimirOpcion("2", "Modificar producto");
         imprimirOpcion("0", "Volver");
         System.out.println(SEPARADOR);
     }
