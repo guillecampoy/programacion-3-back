@@ -65,10 +65,11 @@ public class Main {
         boolean volver = false;
         while (!volver) {
             mostrarMenuProductos();
-            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
             switch (opcion) {
                 case "1" -> altaProducto();
                 case "2" -> modificarProducto();
+                case "3" -> bajaProducto();
                 case "0" -> volver = true;
                 default -> imprimirError("Opcion invalida.");
             }
@@ -164,6 +165,30 @@ public class Main {
             imprimirMensaje("Producto modificado correctamente.");
         } catch (RuntimeException exception) {
             imprimirError("No se modifico el producto: " + exception.getMessage());
+        }
+    }
+
+    private void bajaProducto() {
+        imprimirTitulo("Baja logica de producto");
+        long id = entrada.leerLong(
+                prompt("Ingrese ID de producto"),
+                valor -> valor > 0,
+                "Error: ingrese un ID numerico mayor a 0."
+        );
+
+        Producto producto = productoRepository.buscarPorId(id).orElse(null);
+        if (producto == null) {
+            imprimirError("Error: no existe un producto activo con el ID indicado.");
+            return;
+        }
+        if (Boolean.TRUE.equals(producto.getEliminado())) {
+            imprimirError("Error: el producto ya se encuentra dado de baja.");
+            return;
+        }
+
+        String nombre = producto.getNombre();
+        if (productoRepository.eliminarLogico(id)) {
+            imprimirMensaje("Producto dado de baja correctamente: " + nombre);
         }
     }
 
@@ -385,6 +410,7 @@ public class Main {
         System.out.println(SEPARADOR);
         imprimirOpcion("1", "Alta de producto");
         imprimirOpcion("2", "Modificar producto");
+        imprimirOpcion("3", "Baja logica de producto");
         imprimirOpcion("0", "Volver");
         System.out.println(SEPARADOR);
     }
