@@ -1,11 +1,10 @@
-package ar.edu.tup.programacion3.entities;
+package com.tp.jpa.model;
 
-import com.tp.jpa.enums.Estado;
-import com.tp.jpa.enums.FormaPago;
-import com.tp.jpa.interfaces.Calculable;
+import com.tp.jpa.model.enums.Estado;
+import com.tp.jpa.model.enums.FormaPago;
 import com.tp.jpa.seed.DatosSemilla;
 import com.tp.jpa.seed.DatosSemillaFactory;
-import com.tp.jpa.entities.*;
+import com.tp.jpa.model.*;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;

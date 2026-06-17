@@ -1,4 +1,4 @@
-package ar.edu.tup.programacion3.seed;
+package com.tp.jpa.seed;
 
 import com.tp.jpa.seed.PersistenciaInicial;
 import org.junit.jupiter.api.Test;

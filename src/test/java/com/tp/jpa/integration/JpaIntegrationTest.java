@@ -1,9 +1,9 @@
-package ar.edu.tup.programacion3.integration;
+package com.tp.jpa.integration;
 
-import com.tp.jpa.entities.Categoria;
-import com.tp.jpa.entities.Pedido;
-import com.tp.jpa.entities.Producto;
-import com.tp.jpa.entities.Usuario;
+import com.tp.jpa.model.Categoria;
+import com.tp.jpa.model.Pedido;
+import com.tp.jpa.model.Producto;
+import com.tp.jpa.model.Usuario;
 import com.tp.jpa.seed.DatosSemilla;
 import com.tp.jpa.seed.DatosSemillaFactory;
 import jakarta.persistence.EntityManager;

@@ -1,7 +1,7 @@
 package com.tp.jpa;
 
-import com.tp.jpa.entities.Categoria;
-import com.tp.jpa.entities.Producto;
+import com.tp.jpa.model.Categoria;
+import com.tp.jpa.model.Producto;
 import com.tp.jpa.utils.EntradaValidada;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
@@ -80,11 +80,12 @@ public class Main {
         boolean volver = false;
         while (!volver) {
             mostrarMenuProductos();
-            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4"));
             switch (opcion) {
                 case "1" -> altaProducto();
                 case "2" -> modificarProducto();
                 case "3" -> bajaProducto();
+                case "4" -> listarProductosActivos();
                 case "0" -> volver = true;
                 default -> imprimirError("Opcion invalida.");
             }
@@ -95,15 +96,36 @@ public class Main {
         boolean volver = false;
         while (!volver) {
             mostrarMenuCategorias();
-            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
+            String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4"));
             switch (opcion) {
                 case "1" -> altaCategoria();
                 case "2" -> modificarCategoria();
                 case "3" -> bajaCategoria();
+                case "4" -> listarCategoriasActivas();
                 case "0" -> volver = true;
                 default -> imprimirError("Opcion invalida.");
             }
         }
+    }
+
+    private void listarCategoriasActivas() {
+        imprimirTitulo("Categorias activas");
+        List<Categoria> categorias = catalogoService.listarCategoriasActivas();
+        if (categorias.isEmpty()) {
+            imprimirMensaje("No hay categorias activas para mostrar.");
+            return;
+        }
+        categorias.forEach(this::imprimirCategoria);
+    }
+
+    private void listarProductosActivos() {
+        imprimirTitulo("Productos activos");
+        List<Producto> productos = catalogoService.listarProductosActivos();
+        if (productos.isEmpty()) {
+            imprimirMensaje("No hay productos activos para mostrar.");
+            return;
+        }
+        productos.forEach(this::imprimirProducto);
     }
 
     private void productosPorCategoria() {
@@ -402,6 +424,7 @@ public class Main {
         imprimirOpcion("1", "Alta de categoria");
         imprimirOpcion("2", "Modificar categoria");
         imprimirOpcion("3", "Baja logica de categoria");
+        imprimirOpcion("4", "Listar categorias activas");
         imprimirOpcion("0", "Volver");
         System.out.println(SEPARADOR);
     }
@@ -414,6 +437,7 @@ public class Main {
         imprimirOpcion("1", "Alta de producto");
         imprimirOpcion("2", "Modificar producto");
         imprimirOpcion("3", "Baja logica de producto");
+        imprimirOpcion("4", "Listar productos activos");
         imprimirOpcion("0", "Volver");
         System.out.println(SEPARADOR);
     }

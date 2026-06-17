@@ -1,7 +1,7 @@
 package com.tp.jpa;
 
-import com.tp.jpa.entities.Categoria;
-import com.tp.jpa.entities.Producto;
+import com.tp.jpa.model.Categoria;
+import com.tp.jpa.model.Producto;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -306,6 +306,24 @@ class MainTest {
         assertTrue(output.contains("ya se encuentra dada de baja"));
     }
 
+    @Test
+    void testListarCategoriasActivas() {
+        FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+        FakeProductoRepository prodRepo = new FakeProductoRepository();
+        Categoria activa = crearCategoria(1, "Bebidas");
+        Categoria eliminada = crearCategoria(2, "Archivada");
+        eliminada.setEliminado(true);
+        catRepo.add(activa);
+        catRepo.add(eliminada);
+        Scanner scanner = new Scanner("1\n4\n0\n0\n");
+        Main main = new Main(scanner, catRepo, prodRepo);
+        ejecutar(main);
+        String output = outContent.toString();
+        assertTrue(output.contains("Categorias activas"));
+        assertTrue(output.contains("Bebidas"));
+        assertFalse(output.contains("Archivada"));
+    }
+
     // ===== PRODUCTO TESTS =====
 
     @Test
@@ -427,6 +445,26 @@ class MainTest {
         ejecutar(main);
         String output = outContent.toString();
         assertTrue(output.contains("ya se encuentra dado de baja"));
+    }
+
+    @Test
+    void testListarProductosActivos() {
+        FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+        FakeProductoRepository prodRepo = new FakeProductoRepository();
+        Categoria cat = crearCategoria(1, "Bebidas");
+        catRepo.add(cat);
+        Producto activo = crearProducto(1, "Cafe", 1500.0, 20, cat);
+        Producto eliminado = crearProducto(2, "Archivado", 100.0, 1, cat);
+        eliminado.setEliminado(true);
+        prodRepo.add(activo);
+        prodRepo.add(eliminado);
+        Scanner scanner = new Scanner("2\n4\n0\n0\n");
+        Main main = new Main(scanner, catRepo, prodRepo);
+        ejecutar(main);
+        String output = outContent.toString();
+        assertTrue(output.contains("Productos activos"));
+        assertTrue(output.contains("Cafe"));
+        assertFalse(output.contains("Archivado"));
     }
 
     // ===== REPORTES TESTS =====

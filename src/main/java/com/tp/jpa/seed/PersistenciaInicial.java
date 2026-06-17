@@ -1,9 +1,9 @@
 package com.tp.jpa.seed;
 
-import com.tp.jpa.entities.Categoria;
-import com.tp.jpa.entities.Pedido;
-import com.tp.jpa.entities.Producto;
-import com.tp.jpa.entities.Usuario;
+import com.tp.jpa.model.Categoria;
+import com.tp.jpa.model.Pedido;
+import com.tp.jpa.model.Producto;
+import com.tp.jpa.model.Usuario;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;

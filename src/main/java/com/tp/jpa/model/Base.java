@@ -1,4 +1,4 @@
-package com.tp.jpa.entities;
+package com.tp.jpa.model;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

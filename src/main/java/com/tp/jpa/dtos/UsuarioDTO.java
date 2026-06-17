@@ -1,6 +1,6 @@
 package com.tp.jpa.dtos;
 
-import com.tp.jpa.entities.Usuario;
+import com.tp.jpa.model.Usuario;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

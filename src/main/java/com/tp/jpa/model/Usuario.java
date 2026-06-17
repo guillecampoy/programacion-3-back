@@ -1,7 +1,7 @@
-package com.tp.jpa.entities;
+package com.tp.jpa.model;
 
 import com.tp.jpa.dtos.UsuarioDTO;
-import com.tp.jpa.enums.Rol;
+import com.tp.jpa.model.enums.Rol;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;

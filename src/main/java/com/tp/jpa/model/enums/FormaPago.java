@@ -1,4 +1,4 @@
-package com.tp.jpa.enums;
+package com.tp.jpa.model.enums;
 
 public enum FormaPago {
     TARJETA,

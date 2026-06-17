@@ -1,4 +1,4 @@
-package ar.edu.tup.programacion3.utils;
+package com.tp.jpa.utils;
 
 import com.tp.jpa.utils.EntradaValidada;
 import org.junit.jupiter.api.Test;

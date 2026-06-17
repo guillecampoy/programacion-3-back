@@ -1,6 +1,6 @@
 package com.tp.jpa.repository;
 
-import com.tp.jpa.entities.Base;
+import com.tp.jpa.model.Base;
 import com.tp.jpa.util.JPAUtil;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;

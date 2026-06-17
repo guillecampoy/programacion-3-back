@@ -1,8 +1,7 @@
-package com.tp.jpa.entities;
+package com.tp.jpa.model;
 
-import com.tp.jpa.enums.Estado;
-import com.tp.jpa.enums.FormaPago;
-import com.tp.jpa.interfaces.Calculable;
+import com.tp.jpa.model.enums.Estado;
+import com.tp.jpa.model.enums.FormaPago;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
