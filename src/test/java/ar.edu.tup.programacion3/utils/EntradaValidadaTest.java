@@ -1,5 +1,6 @@
 package ar.edu.tup.programacion3.utils;
 
+import com.tp.jpa.utils.EntradaValidada;
 import org.junit.jupiter.api.Test;
 
 import java.util.Scanner;

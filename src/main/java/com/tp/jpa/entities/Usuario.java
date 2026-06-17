@@ -1,7 +1,7 @@
-package ar.edu.tup.programacion3.entities;
+package com.tp.jpa.entities;
 
-import ar.edu.tup.programacion3.dtos.UsuarioDTO;
-import ar.edu.tup.programacion3.enums.Rol;
+import com.tp.jpa.dtos.UsuarioDTO;
+import com.tp.jpa.enums.Rol;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;

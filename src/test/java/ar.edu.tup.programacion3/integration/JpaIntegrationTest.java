@@ -1,12 +1,11 @@
 package ar.edu.tup.programacion3.integration;
 
-import ar.edu.tup.programacion3.entities.Categoria;
-import ar.edu.tup.programacion3.entities.DetallePedido;
-import ar.edu.tup.programacion3.entities.Pedido;
-import ar.edu.tup.programacion3.entities.Producto;
-import ar.edu.tup.programacion3.entities.Usuario;
-import ar.edu.tup.programacion3.seed.DatosSemilla;
-import ar.edu.tup.programacion3.seed.DatosSemillaFactory;
+import com.tp.jpa.entities.Categoria;
+import com.tp.jpa.entities.Pedido;
+import com.tp.jpa.entities.Producto;
+import com.tp.jpa.entities.Usuario;
+import com.tp.jpa.seed.DatosSemilla;
+import com.tp.jpa.seed.DatosSemillaFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;

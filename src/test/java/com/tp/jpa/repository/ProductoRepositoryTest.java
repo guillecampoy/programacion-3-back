@@ -1,7 +1,7 @@
 package com.tp.jpa.repository;
 
-import ar.edu.tup.programacion3.entities.Categoria;
-import ar.edu.tup.programacion3.entities.Producto;
+import com.tp.jpa.entities.Categoria;
+import com.tp.jpa.entities.Producto;
 import com.tp.jpa.util.JPAUtil;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;

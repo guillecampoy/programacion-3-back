@@ -1,6 +1,6 @@
 package com.tp.jpa.repository;
 
-import ar.edu.tup.programacion3.entities.Categoria;
+import com.tp.jpa.entities.Categoria;
 
 public class CategoriaRepository extends BaseRepository<Categoria> {
     public CategoriaRepository() {

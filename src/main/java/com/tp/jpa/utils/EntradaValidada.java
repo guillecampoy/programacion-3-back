@@ -1,6 +1,6 @@
-package ar.edu.tup.programacion3.utils;
+package com.tp.jpa.utils;
 
-import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirError;
+import static com.tp.jpa.utils.ConsolaUtils.imprimirError;
 
 import java.util.Set;
 import java.util.Scanner;

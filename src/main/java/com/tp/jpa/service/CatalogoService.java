@@ -1,7 +1,7 @@
 package com.tp.jpa.service;
 
-import ar.edu.tup.programacion3.entities.Categoria;
-import ar.edu.tup.programacion3.entities.Producto;
+import com.tp.jpa.entities.Categoria;
+import com.tp.jpa.entities.Producto;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
 

@@ -1,6 +1,6 @@
 package com.tp.jpa.repository;
 
-import ar.edu.tup.programacion3.entities.Producto;
+import com.tp.jpa.entities.Producto;
 import com.tp.jpa.util.JPAUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;

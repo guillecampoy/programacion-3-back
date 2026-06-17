@@ -1,9 +1,9 @@
-package ar.edu.tup.programacion3.seed;
+package com.tp.jpa.seed;
 
-import ar.edu.tup.programacion3.entities.Categoria;
-import ar.edu.tup.programacion3.entities.Pedido;
-import ar.edu.tup.programacion3.entities.Producto;
-import ar.edu.tup.programacion3.entities.Usuario;
+import com.tp.jpa.entities.Categoria;
+import com.tp.jpa.entities.Pedido;
+import com.tp.jpa.entities.Producto;
+import com.tp.jpa.entities.Usuario;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;

@@ -1,4 +1,4 @@
-package ar.edu.tup.programacion3.utils;
+package com.tp.jpa.utils;
 
 public final class ConsolaUtils {
     public static final String SEPARADOR = "------------------------------------------------------------";

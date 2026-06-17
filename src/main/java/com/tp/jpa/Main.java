@@ -1,8 +1,8 @@
 package com.tp.jpa;
 
-import ar.edu.tup.programacion3.entities.Categoria;
-import ar.edu.tup.programacion3.entities.Producto;
-import ar.edu.tup.programacion3.utils.EntradaValidada;
+import com.tp.jpa.entities.Categoria;
+import com.tp.jpa.entities.Producto;
+import com.tp.jpa.utils.EntradaValidada;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
 import com.tp.jpa.service.CatalogoService;
@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
-import static ar.edu.tup.programacion3.utils.ConsolaUtils.SEPARADOR;
-import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirError;
-import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirMensaje;
-import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirOpcion;
-import static ar.edu.tup.programacion3.utils.ConsolaUtils.imprimirTitulo;
-import static ar.edu.tup.programacion3.utils.ConsolaUtils.prompt;
+import static com.tp.jpa.utils.ConsolaUtils.SEPARADOR;
+import static com.tp.jpa.utils.ConsolaUtils.imprimirError;
+import static com.tp.jpa.utils.ConsolaUtils.imprimirMensaje;
+import static com.tp.jpa.utils.ConsolaUtils.imprimirOpcion;
+import static com.tp.jpa.utils.ConsolaUtils.imprimirTitulo;
+import static com.tp.jpa.utils.ConsolaUtils.prompt;
 
 public class Main {
     private final Scanner scanner;

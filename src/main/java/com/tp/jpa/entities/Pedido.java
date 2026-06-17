@@ -1,8 +1,8 @@
-package ar.edu.tup.programacion3.entities;
+package com.tp.jpa.entities;
 
-import ar.edu.tup.programacion3.enums.Estado;
-import ar.edu.tup.programacion3.enums.FormaPago;
-import ar.edu.tup.programacion3.interfaces.Calculable;
+import com.tp.jpa.enums.Estado;
+import com.tp.jpa.enums.FormaPago;
+import com.tp.jpa.interfaces.Calculable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;

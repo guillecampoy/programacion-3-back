@@ -1,4 +1,4 @@
-package ar.edu.tup.programacion3;
+package com.tp.jpa;
 
 import org.h2.tools.Server;
 

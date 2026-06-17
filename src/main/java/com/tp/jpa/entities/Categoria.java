@@ -1,4 +1,4 @@
-package ar.edu.tup.programacion3.entities;
+package com.tp.jpa.entities;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;

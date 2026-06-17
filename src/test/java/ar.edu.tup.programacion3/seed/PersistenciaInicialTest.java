@@ -1,5 +1,6 @@
 package ar.edu.tup.programacion3.seed;
 
+import com.tp.jpa.seed.PersistenciaInicial;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
