@@ -267,7 +267,7 @@ public class Main {
             Categoria guardada = catalogoService.crearCategoria(nombre, descripcion);
             imprimirMensaje("Categoria creada correctamente. ID generado: " + guardada.getId());
         } catch (RuntimeException exception) {
-            imprimirError("No se guardo la categoria: " + exception.getMessage());
+            imprimirError("No se guardo la categoria: " + mensajePersistencia(exception));
         }
     }
 
@@ -366,8 +366,23 @@ public class Main {
                     + " | Categoria: "
                     + categoria.getNombre());
         } catch (RuntimeException exception) {
-            imprimirError("No se guardo el producto: " + exception.getMessage());
+            imprimirError("No se guardo el producto: " + mensajePersistencia(exception));
         }
+    }
+
+    private String mensajePersistencia(RuntimeException exception) {
+        String mensaje = exception.getMessage();
+        if (mensaje == null || mensaje.isBlank()) {
+            return "ocurrio un error de persistencia.";
+        }
+        if (mensaje.contains("NULL not allowed for column \"ID\"")
+                || mensaje.contains("La columna \"ID\" no permite valores nulos")
+                || mensaje.contains("insert into Categoria")
+                || mensaje.contains("insert into Producto")) {
+            return "la base local tiene un esquema anterior para IDs. "
+                    + "Recree la base H2 local o ejecute los tests con H2 en memoria.";
+        }
+        return mensaje;
     }
 
     private String leerLinea(String prompt) {

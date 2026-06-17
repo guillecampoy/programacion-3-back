@@ -93,6 +93,18 @@ class MainTest {
         }
     }
 
+    static class FailingCategoriaRepository extends FakeCategoriaRepository {
+        @Override
+        public Categoria guardar(Categoria entity) {
+            throw new RuntimeException(
+                    "could not execute statement [La columna \"ID\" no permite valores nulos (NULL) "
+                            + "NULL not allowed for column \"ID\"; SQL statement: "
+                            + "insert into Categoria (createdAt,descripcion,eliminado,nombre,id) "
+                            + "values (?,?,?,?,default)]"
+            );
+        }
+    }
+
     static class FakeProductoRepository extends ProductoRepository {
         private final Map<Long, Producto> store = new HashMap<>();
         private long nextId = 1;
@@ -225,6 +237,20 @@ class MainTest {
         String output = outContent.toString();
         assertTrue(output.contains("el nombre de la categoria es obligatorio"));
         assertTrue(output.contains("Categoria creada correctamente"));
+    }
+
+    @Test
+    void testAltaCategoriaConEsquemaViejoMuestraMensajeAccionable() {
+        FakeCategoriaRepository catRepo = new FailingCategoriaRepository();
+        FakeProductoRepository prodRepo = new FakeProductoRepository();
+        Scanner scanner = new Scanner("1\n1\nBebidas\nDescripcion\n0\n0\n");
+        Main main = new Main(scanner, catRepo, prodRepo);
+        ejecutar(main);
+        String output = outContent.toString();
+        assertTrue(output.contains("No se guardo la categoria"));
+        assertTrue(output.contains("la base local tiene un esquema anterior para IDs"));
+        assertFalse(output.contains("insert into Categoria"));
+        assertFalse(output.contains("NULL not allowed for column"));
     }
 
     @Test

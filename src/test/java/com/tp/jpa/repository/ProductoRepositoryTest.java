@@ -120,10 +120,10 @@ class ProductoRepositoryTest {
 
     @Test
     void testSiguienteId() {
-        assertEquals(1L, productoRepository.siguienteId());
+        long siguienteIdInicial = productoRepository.siguienteId();
         Categoria cat = guardarCategoria("Bebidas");
         guardarProducto("Test", 10.0, 1, cat);
-        assertEquals(2L, productoRepository.siguienteId());
+        assertTrue(productoRepository.siguienteId() > siguienteIdInicial);
     }
 
     @Test
