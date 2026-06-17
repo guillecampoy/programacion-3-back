@@ -5,9 +5,9 @@ import ar.edu.tup.programacion3.entities.Producto;
 import ar.edu.tup.programacion3.utils.EntradaValidada;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
+import com.tp.jpa.service.CatalogoService;
 import com.tp.jpa.util.JPAUtil;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -22,21 +22,22 @@ import static ar.edu.tup.programacion3.utils.ConsolaUtils.prompt;
 public class Main {
     private final Scanner scanner;
     private final EntradaValidada entrada;
-    private final CategoriaRepository categoriaRepository;
-    private final ProductoRepository productoRepository;
+    private final CatalogoService catalogoService;
 
     public Main(Scanner scanner, CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
+        this(scanner, new CatalogoService(categoriaRepository, productoRepository));
+    }
+
+    Main(Scanner scanner, CatalogoService catalogoService) {
         this.scanner = scanner;
         this.entrada = new EntradaValidada(scanner);
-        this.categoriaRepository = categoriaRepository;
-        this.productoRepository = productoRepository;
+        this.catalogoService = catalogoService;
     }
 
     Main(EntradaValidada entrada, CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
         this.scanner = null;
         this.entrada = entrada;
-        this.categoriaRepository = categoriaRepository;
-        this.productoRepository = productoRepository;
+        this.catalogoService = new CatalogoService(categoriaRepository, productoRepository);
     }
 
     public static void main(String[] args) {
@@ -107,7 +108,7 @@ public class Main {
 
     private void productosPorCategoria() {
         imprimirTitulo("Productos por categoria");
-        List<Categoria> categorias = categoriaRepository.listarActivos();
+        List<Categoria> categorias = catalogoService.listarCategoriasActivas();
         if (categorias.isEmpty()) {
             imprimirMensaje("No hay categorias activas disponibles.");
             return;
@@ -122,13 +123,16 @@ public class Main {
                 idsValidos::contains,
                 "Error: no existe una categoria activa con el ID indicado."
         );
-        Categoria categoria = categoriaRepository.buscarPorId(categoriaId).orElse(null);
-        if (categoria == null || Boolean.TRUE.equals(categoria.getEliminado())) {
-            imprimirError("Error: no existe una categoria activa con el ID indicado.");
+
+        Categoria categoria;
+        List<Producto> productos;
+        try {
+            categoria = catalogoService.obtenerCategoriaActiva(categoriaId);
+            productos = catalogoService.buscarProductosActivosPorCategoria(categoriaId);
+        } catch (RuntimeException exception) {
+            imprimirError(exception.getMessage());
             return;
         }
-
-        List<Producto> productos = productoRepository.buscarPorCategoria(categoriaId);
         if (productos.isEmpty()) {
             imprimirMensaje("No hay productos activos para la categoria seleccionada.");
             return;
@@ -140,7 +144,7 @@ public class Main {
 
     private void modificarProducto() {
         imprimirTitulo("Modificar producto");
-        List<Producto> productos = productoRepository.listarActivos();
+        List<Producto> productos = catalogoService.listarProductosActivos();
         if (productos.isEmpty()) {
             imprimirMensaje("No hay productos activos para modificar.");
             return;
@@ -156,9 +160,11 @@ public class Main {
                 "Error: no existe un producto activo con el ID indicado."
         );
 
-        Producto producto = productoRepository.buscarPorId(id).orElse(null);
-        if (producto == null || Boolean.TRUE.equals(producto.getEliminado())) {
-            imprimirError("Error: no existe un producto activo con el ID indicado.");
+        Producto producto;
+        try {
+            producto = catalogoService.obtenerProductoActivo(id);
+        } catch (RuntimeException exception) {
+            imprimirError(exception.getMessage());
             return;
         }
 
@@ -199,16 +205,7 @@ public class Main {
         }
 
         try {
-            if (!nombre.isBlank()) {
-                producto.setNombre(nombre.trim());
-            }
-            if (nuevoPrecio != null) {
-                producto.setPrecio(nuevoPrecio);
-            }
-            if (nuevoStock != null) {
-                producto.setStock(nuevoStock);
-            }
-            productoRepository.guardar(producto);
+            catalogoService.modificarProducto(id, nombre, nuevoPrecio, nuevoStock);
             imprimirMensaje("Producto modificado correctamente.");
         } catch (RuntimeException exception) {
             imprimirError("No se modifico el producto: " + exception.getMessage());
@@ -223,19 +220,11 @@ public class Main {
                 "Error: ingrese un ID numerico mayor a 0."
         );
 
-        Producto producto = productoRepository.buscarPorId(id).orElse(null);
-        if (producto == null) {
-            imprimirError("Error: no existe un producto activo con el ID indicado.");
-            return;
-        }
-        if (Boolean.TRUE.equals(producto.getEliminado())) {
-            imprimirError("Error: el producto ya se encuentra dado de baja.");
-            return;
-        }
-
-        String nombre = producto.getNombre();
-        if (productoRepository.eliminarLogico(id)) {
-            imprimirMensaje("Producto dado de baja correctamente: " + nombre);
+        try {
+            Producto producto = catalogoService.bajaProducto(id);
+            imprimirMensaje("Producto dado de baja correctamente: " + producto.getNombre());
+        } catch (RuntimeException exception) {
+            imprimirError(exception.getMessage());
         }
     }
 
@@ -253,13 +242,7 @@ public class Main {
         );
 
         try {
-            Categoria categoria = new Categoria();
-            categoria.setNombre(nombre.trim());
-            categoria.setDescripcion(descripcion.trim());
-            categoria.setEliminado(false);
-            categoria.setCreatedAt(LocalDateTime.now());
-
-            Categoria guardada = categoriaRepository.guardar(categoria);
+            Categoria guardada = catalogoService.crearCategoria(nombre, descripcion);
             imprimirMensaje("Categoria creada correctamente. ID generado: " + guardada.getId());
         } catch (RuntimeException exception) {
             imprimirError("No se guardo la categoria: " + exception.getMessage());
@@ -268,7 +251,7 @@ public class Main {
 
     private void modificarCategoria() {
         imprimirTitulo("Modificar categoria");
-        List<Categoria> categorias = categoriaRepository.listarActivos();
+        List<Categoria> categorias = catalogoService.listarCategoriasActivas();
         if (categorias.isEmpty()) {
             imprimirMensaje("No hay categorias activas para modificar.");
             return;
@@ -284,9 +267,11 @@ public class Main {
                 "Error: no existe una categoria activa con el ID indicado."
         );
 
-        Categoria categoria = categoriaRepository.buscarPorId(id).orElse(null);
-        if (categoria == null || Boolean.TRUE.equals(categoria.getEliminado())) {
-            imprimirError("Error: no existe una categoria activa con el ID indicado.");
+        Categoria categoria;
+        try {
+            categoria = catalogoService.obtenerCategoriaActiva(id);
+        } catch (RuntimeException exception) {
+            imprimirError(exception.getMessage());
             return;
         }
 
@@ -296,15 +281,9 @@ public class Main {
 
         String nombre = leerLinea(prompt("Nuevo nombre (enter para conservar)"));
         String descripcion = leerLinea(prompt("Nueva descripcion (enter para conservar)"));
-        if (!nombre.isBlank()) {
-            categoria.setNombre(nombre.trim());
-        }
-        if (!descripcion.isBlank()) {
-            categoria.setDescripcion(descripcion.trim());
-        }
 
         try {
-            categoriaRepository.guardar(categoria);
+            catalogoService.modificarCategoria(id, nombre, descripcion);
             imprimirMensaje("Categoria modificada correctamente.");
         } catch (RuntimeException exception) {
             imprimirError("No se modifico la categoria: " + exception.getMessage());
@@ -319,25 +298,17 @@ public class Main {
                 "Error: ingrese un ID numerico mayor a 0."
         );
 
-        Categoria categoria = categoriaRepository.buscarPorId(id).orElse(null);
-        if (categoria == null) {
-            imprimirError("Error: no existe una categoria activa con el ID indicado.");
-            return;
-        }
-        if (Boolean.TRUE.equals(categoria.getEliminado())) {
-            imprimirError("Error: la categoria ya se encuentra dada de baja.");
-            return;
-        }
-
-        String nombre = categoria.getNombre();
-        if (categoriaRepository.eliminarLogico(id)) {
-            imprimirMensaje("Categoria dada de baja correctamente: " + nombre);
+        try {
+            Categoria categoria = catalogoService.bajaCategoria(id);
+            imprimirMensaje("Categoria dada de baja correctamente: " + categoria.getNombre());
+        } catch (RuntimeException exception) {
+            imprimirError(exception.getMessage());
         }
     }
 
     private void altaProducto() {
         imprimirTitulo("Alta de producto");
-        List<Categoria> categorias = categoriaRepository.listarActivos();
+        List<Categoria> categorias = catalogoService.listarCategoriasActivas();
         if (categorias.isEmpty()) {
             imprimirMensaje("No hay categorias activas disponibles. Debe crear una categoria antes de cargar productos.");
             return;
@@ -352,9 +323,12 @@ public class Main {
                 idsValidos::contains,
                 "Error: no existe una categoria activa con el ID indicado."
         );
-        Categoria categoria = categoriaRepository.buscarPorId(categoriaId).orElse(null);
-        if (categoria == null || Boolean.TRUE.equals(categoria.getEliminado())) {
-            imprimirError("Error: no existe una categoria activa con el ID indicado.");
+
+        Categoria categoria;
+        try {
+            categoria = catalogoService.obtenerCategoriaActiva(categoriaId);
+        } catch (RuntimeException exception) {
+            imprimirError(exception.getMessage());
             return;
         }
 
@@ -364,18 +338,7 @@ public class Main {
         int stock = entrada.leerEntero(prompt("Stock"), 0);
 
         try {
-            Producto producto = new Producto();
-            producto.setNombre(nombre.trim());
-            producto.setDescripcion(descripcion.trim());
-            producto.setPrecio(precio);
-            producto.setStock(stock);
-            producto.setImagen("sin-imagen");
-            producto.setDisponible(true);
-            producto.setEliminado(false);
-            producto.setCreatedAt(LocalDateTime.now());
-            producto.setCategoria(referenciaCategoria(categoria));
-
-            Producto guardado = productoRepository.guardar(producto);
+            Producto guardado = catalogoService.crearProducto(categoriaId, nombre, descripcion, precio, stock);
             imprimirMensaje("Producto creado correctamente. ID generado: "
                     + guardado.getId()
                     + " | Categoria: "
@@ -383,16 +346,6 @@ public class Main {
         } catch (RuntimeException exception) {
             imprimirError("No se guardo el producto: " + exception.getMessage());
         }
-    }
-
-    private Categoria referenciaCategoria(Categoria categoria) {
-        Categoria referencia = new Categoria();
-        referencia.setId(categoria.getId());
-        referencia.setNombre(categoria.getNombre());
-        referencia.setDescripcion(categoria.getDescripcion());
-        referencia.setEliminado(categoria.getEliminado());
-        referencia.setCreatedAt(categoria.getCreatedAt());
-        return referencia;
     }
 
     private String leerLinea(String prompt) {

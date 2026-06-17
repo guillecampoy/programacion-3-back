@@ -47,7 +47,7 @@ Estas restricciones son de maxima prioridad para el agente de desarrollo:
    - No depender de IDs fijos como `1L`, `48L` o `50L` para encontrar datos iniciales.
    - No modificar enums existentes salvo que una nueva consigna lo pida explícitamente.
    - No modificar `persistence.xml` salvo necesidad justificada.
-2. Crear los archivos nuevos en los paquetes indicados.
+2. Mantener una sola clase de entrada de consola: `src/main/java/com/tp/jpa/Main.java`.
 3. Mantener el proyecto Gradle compilable y ejecutable.
 4. Implementar persistencia con JPA, `EntityManager`, transacciones y JPQL.
 5. No reemplazar JPA por colecciones en memoria, JDBC directo, SQL nativo ni frameworks no pedidos.
@@ -59,41 +59,50 @@ Estas restricciones son de maxima prioridad para el agente de desarrollo:
 11. Todo `EntityManager` abierto debe cerrarse en un bloque `finally`.
 12. Toda transacción de escritura debe hacer `rollback` si ocurre un error antes del `commit`.
 13. Las operaciones de menu deben manejar errores de usuario sin romper la aplicación por una excepción no controlada.
+14. La lógica de negocio debe vivir en `CatalogoService`; `Main` debe limitarse a entrada/salida de consola y navegación de menús.
 
 ## Estructura de paquetes requerida
 
 La estructura esperada dentro de `src/main/java/` es:
 
 ```text
+ar.edu.tup.programacion3/
+  entities/          # entidades JPA del dominio
+  enums/             # enums del dominio
+  seed/              # carga y operaciones iniciales de persistencia
+  utils/             # utilidades compartidas de consola/entrada
 com.tp.jpa/
-  model/             # ya existe; no modificar
-  model/enums/       # ya existe; no modificar
-  util/              # ya existe; contiene JPAUtil.java; no modificar
-  repository/        # nuevo; crear este paquete
+  util/
+    JPAUtil.java
+  repository/
     BaseRepository.java
     CategoriaRepository.java
     ProductoRepository.java
-  Main.java          # nuevo; clase principal con menu de consola
+  service/
+    CatalogoService.java
+  Main.java          # unica clase Main de consola
 ```
 
 En términos de paquetes Java:
 
 ```text
 com.tp.jpa
-com.tp.jpa.model
-com.tp.jpa.model.enums
 com.tp.jpa.util
 com.tp.jpa.repository
+com.tp.jpa.service
 ```
 
-## Archivos nuevos obligatorios
+La clase `src/main/java/ar/edu/tup/programacion3/Main.java` de una entrega anterior fue removida. La ejecución del programa queda centralizada en `com.tp.jpa.Main`.
 
-| Archivo                    | Paquete                 | Responsabilidad                                                                                                            |
-|----------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------|
-| `BaseRepository.java`      | `com.tp.jpa.repository` | Repositorio generico abstracto `<T>` con operaciones comunes: `guardar`, `buscarPorId`, `listarActivos`, `eliminarLogico`. |
-| `CategoriaRepository.java` | `com.tp.jpa.repository` | Repositorio especifico de `Categoria`. Extiende `BaseRepository<Categoria>`. No agrega metodos.                            |
-| `ProductoRepository.java`  | `com.tp.jpa.repository` | Repositorio especifico de `Producto`. Extiende `BaseRepository<Producto>` y agrega `buscarPorCategoria(Long categoriaId)`. |
-| `Main.java`                | `com.tp.jpa`            | Aplicacion de consola con menu principal, submenu de Categorias, submenu de Productos y submenu de Reportes.               |
+## Archivos principales
+
+| Archivo                    | Paquete                 | Responsabilidad                                                                                                               |
+|----------------------------|-------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `BaseRepository.java`      | `com.tp.jpa.repository` | Repositorio generico abstracto `<T>` con operaciones comunes: `guardar`, `buscarPorId`, `listarActivos`, `eliminarLogico`.    |
+| `CategoriaRepository.java` | `com.tp.jpa.repository` | Repositorio especifico de `Categoria`. Extiende `BaseRepository<Categoria>`. No agrega metodos.                               |
+| `ProductoRepository.java`  | `com.tp.jpa.repository` | Repositorio especifico de `Producto`. Extiende `BaseRepository<Producto>` y agrega `buscarPorCategoria(Long categoriaId)`.    |
+| `CatalogoService.java`     | `com.tp.jpa.service`    | Capa de servicio para reglas de negocio, validación de activos, creación, modificación, baja lógica y reportes por categoria. |
+| `Main.java`                | `com.tp.jpa`            | Aplicacion de consola con menu principal y submenus. No accede directamente a repositorios para reglas de negocio.            |
 
 ## Protocolo recomendado para agente de desarrollo
 
@@ -124,6 +133,7 @@ Confirmar:
 9. Método disponible en `JPAUtil` para obtener `EntityManagerFactory`.
 10. Forma ya prevista por el proyecto para ejecutar una clase `main`.
 11. Que las altas no asignen IDs antes de persistir.
+12. Que `Main` use `CatalogoService` para operaciones de negocio.
 
 Regla de trabajo: implementar una historia por vez, compilar, corregir y recién después avanzar.
 
@@ -226,9 +236,25 @@ WHERE p.categoria.id = :categoriaId
 
 Si la entidad usa un nombre JPA personalizado con `@Entity(name = "...")`, ajustar el nombre de entidad en JPQL respetando el modelo existente.
 
+## Contrato técnico de CatalogoService
+
+`CatalogoService` debe estar en `com.tp.jpa.service` y concentrar la lógica de negocio que antes quedaba mezclada en `Main`.
+
+Responsabilidades:
+
+1. Recibir `CategoriaRepository` y `ProductoRepository` por constructor.
+2. Crear categorías y productos con `id == null` para respetar IDs autogenerados.
+3. Setear valores operativos por defecto (`eliminado = false`, `createdAt`, `disponible`, imagen por defecto en productos).
+4. Validar existencia y estado activo antes de modificar, dar de baja o listar productos por categoria.
+5. Ejecutar bajas lógicas a través de los repositorios.
+6. Exponer listados activos para que la consola pueda mostrarlos y validar opciones.
+7. Lanzar excepciones con mensajes de negocio claros cuando el ID no existe o el registro ya está dado de baja.
+
+`Main` debe llamar a este servicio y reservarse la lectura de datos, impresión de menús, parseo de entradas y mensajes de consola.
+
 ## Contrato de Main
 
-`Main.java` debe estar en `com.tp.jpa` y exponer un menu principal de consola.
+`Main.java` debe estar en `com.tp.jpa` y exponer el menu principal de consola. Es la unica clase `Main` de la aplicación.
 
 Menu principal sugerido:
 
@@ -248,7 +274,6 @@ Submenu de Categorías:
 1. Alta de categoria
 2. Modificar categoria
 3. Baja logica de categoria
-4. Listar categorias activas
 0. Volver
 ```
 
@@ -259,7 +284,6 @@ Submenu de Productos:
 1. Alta de producto
 2. Modificar producto
 3. Baja logica de producto
-4. Listar productos activos
 0. Volver
 ```
 
@@ -271,7 +295,7 @@ Submenu de Reportes:
 0. Volver
 ```
 
-El orden exacto puede variar, pero todas las opciones deben ser accesibles desde el menu principal.
+Las opciones de modificación, alta de producto y reportes muestran listados activos cuando son necesarios para seleccionar IDs.
 
 ## Validaciones globales de consola
 
@@ -359,6 +383,14 @@ No hay productos activos para la categoria seleccionada.
 | HU-08 | Baja de producto             | Baja logica, mensaje con nombre, error en ID invalido.                          |       8 |
 | HU-09 | Consulta JPQL                | JPQL correcto, `TypedQuery<Producto>`, parametro nombrado, sin casteos.         |      15 |
 
+Adicionalmente, la entrega actual separa responsabilidades con `CatalogoService`:
+
+| Item extra          | Descripcion                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| Servicio de negocio | `CatalogoService` encapsula reglas de alta, modificación, baja y reportes. |
+| Presentación        | `com.tp.jpa.Main` queda como capa de consola y unica clase `Main`.          |
+| Tests               | `CatalogoServiceTest` cubre reglas de servicio y `MainTest` cubre flujos UI. |
+
 ## Pruebas manuales integrales
 
 Ejecutar este flujo completo antes de entregar:
@@ -374,10 +406,10 @@ Ejecutar este flujo completo antes de entregar:
 9. Validar que precio `0`, precio negativo y texto no numérico no persisten.
 10. Validar que stock negativo y texto no numérico no persisten.
 11. Confirmar que se muestra el ID generado del producto y la categoria asignada.
-12. Listar productos activos y confirmar que aparece ID, nombre, precio, stock y categoria.
-13. Ejecutar reporte `Productos por categoria` y confirmar que muestra el producto.
+12. Ejecutar reporte `Productos por categoria` y confirmar que aparece ID, nombre, precio y stock.
+13. Entrar a modificación de producto y confirmar que el producto aparece en el listado de selección.
 14. Dar de baja lógicamente el producto.
-15. Listar productos activos y confirmar que ya no aparece.
+15. Entrar nuevamente a modificación de producto o al reporte y confirmar que ya no aparece.
 16. Ejecutar nuevamente reporte `Productos por categoria` y confirmar que ya no aparece el producto dado de baja.
 17. Dar de baja lógicamente una categoria.
 18. Listar categorías activas y confirmar que ya no aparece.
@@ -401,6 +433,12 @@ También se puede ejecutar la suite de pruebas sin limpiar artefactos previos:
 ./gradlew lintJavaFormatting
 ```
 
+Tests relevantes para esta separación:
+
+```bash
+./gradlew test --tests com.tp.jpa.MainTest --tests com.tp.jpa.service.CatalogoServiceTest
+```
+
 Para ejecutar, usar la configuración existente del proyecto. Posibles alternativas:
 
 ```bash
@@ -412,6 +450,8 @@ O ejecutar desde el IDE la clase:
 ```text
 com.tp.jpa.Main
 ```
+
+No debe existir una segunda clase `Main` en `ar.edu.tup.programacion3`; esa entrada anterior fue removida de la entrega.
 
 El bloque `test` de `build.gradle` configura los tests de repositorios con H2 en memoria y esquema recreado. Esto evita que una base local vieja, creada antes de usar IDs identity, afecte las pruebas automatizadas.
 
