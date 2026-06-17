@@ -32,34 +32,25 @@ public abstract class BaseRepository<T> {
   }
 
   public Optional<T> buscarPorId(Long id) {
-    EntityManager entityManager = crearEntityManager();
-    try {
+    try (EntityManager entityManager = crearEntityManager()) {
       return Optional.ofNullable(entityManager.find(entityClass, id));
-    } finally {
-      entityManager.close();
     }
   }
 
   public List<T> listarActivos() {
-    EntityManager entityManager = crearEntityManager();
-    try {
+    try (EntityManager entityManager = crearEntityManager()) {
       return entityManager
           .createQuery(
               "select e from " + entityName() + " e where e.eliminado = false", entityClass)
           .getResultList();
-    } finally {
-      entityManager.close();
     }
   }
 
   public List<T> listarEliminados() {
-    EntityManager entityManager = crearEntityManager();
-    try {
+    try (EntityManager entityManager = crearEntityManager()) {
       return entityManager
           .createQuery("select e from " + entityName() + " e where e.eliminado = true", entityClass)
           .getResultList();
-    } finally {
-      entityManager.close();
     }
   }
 
@@ -96,15 +87,12 @@ public abstract class BaseRepository<T> {
   }
 
   public long siguienteId() {
-    EntityManager entityManager = crearEntityManager();
-    try {
+    try (EntityManager entityManager = crearEntityManager()) {
       Long maxId =
           entityManager
               .createQuery("select coalesce(max(e.id), 0) from " + entityName() + " e", Long.class)
               .getSingleResult();
       return maxId + 1;
-    } finally {
-      entityManager.close();
     }
   }
 
