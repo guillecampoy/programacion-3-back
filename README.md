@@ -16,16 +16,37 @@ Al finalizar, el proyecto debe permitir ejecutar una aplicacion de consola que e
 4. Repositorios JPA reutilizables para `Categoria` y `Producto`.
 5. Baja lógica mediante el campo `eliminado`.
 6. Listados que muestren solo registros activos (`eliminado = false`).
+7. Generación automática de IDs por la base de datos/JPA.
+
+## Generación automática de IDs
+
+La clase base del modelo (`ar.edu.tup.programacion3.entities.Base`) centraliza el identificador de las entidades y lo delega a JPA/Hibernate:
+
+```java
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
+```
+
+Con esta configuración:
+
+1. Las entidades nuevas deben crearse con `id == null`.
+2. No se debe llamar a `setId(...)` al crear categorías, productos, usuarios, pedidos o detalles nuevos.
+3. La base de datos asigna el ID al persistir la entidad.
+4. Para mostrar el ID generado en consola, se debe usar la instancia retornada por `guardar(...)` o la entidad administrada por JPA.
+5. La semilla inicial no fija IDs manuales; las relaciones se arman con referencias a objetos, no con valores numéricos hardcodeados.
+
+Los IDs visibles en la consola o en los tests pueden variar según el estado de la base. Por eso, las validaciones deben buscar registros por datos de negocio cuando corresponda, por ejemplo nombre o mail, y usar el ID generado solo después de persistir.
 
 ## Restricciones obligatorias
 
 Estas restricciones son de maxima prioridad para el agente de desarrollo:
 
-1. No modificar ninguna clase del TP base.
-   - No modificar entidades existentes.
-   - No modificar enums existentes.
-   - No modificar `JPAUtil.java`.
-   - No modificar `persistence.xml`.
+1. Mantener el modelo JPA actual y la generación automática de IDs definida en `Base`.
+   - No asignar IDs manualmente en altas ni en datos semilla.
+   - No depender de IDs fijos como `1L`, `48L` o `50L` para encontrar datos iniciales.
+   - No modificar enums existentes salvo que una nueva consigna lo pida explícitamente.
+   - No modificar `persistence.xml` salvo necesidad justificada.
 2. Crear los archivos nuevos en los paquetes indicados.
 3. Mantener el proyecto Gradle compilable y ejecutable.
 4. Implementar persistencia con JPA, `EntityManager`, transacciones y JPQL.
@@ -94,7 +115,7 @@ Confirmar:
 
 1. Paquete real de `Categoria` y `Producto`.
 2. Nombre exacto de los campos.
-3. Tipo de `id`.
+3. Tipo de `id` y estrategia de generación (`@GeneratedValue(strategy = GenerationType.IDENTITY)`).
 4. Tipo de `precio`.
 5. Tipo de `stock`.
 6. Nombre del getter/setter de `eliminado` (`getEliminado`, `isEliminado`, `setEliminado`, etc.).
@@ -102,6 +123,7 @@ Confirmar:
 8. Si `createdAt` se inicializa automáticamente en la entidad o requiere seteo manual.
 9. Método disponible en `JPAUtil` para obtener `EntityManagerFactory`.
 10. Forma ya prevista por el proyecto para ejecutar una clase `main`.
+11. Que las altas no asignen IDs antes de persistir.
 
 Regla de trabajo: implementar una historia por vez, compilar, corregir y recién después avanzar.
 
@@ -161,7 +183,8 @@ public boolean eliminarLogico(Long id);
 ### Detalles importantes
 
 - `guardar(T entity)` debe usar `merge()`, no `persist()`.
-- `merge()` retorna la instancia administrada. Para mostrar ID generados en consola, usar el objeto retornado por `guardar`, no asumir que el objeto original ya tiene ID actualizado.
+- Las entidades nuevas deben llegar a `guardar(T entity)` sin ID manual.
+- `merge()` retorna la instancia administrada. Para mostrar IDs generados en consola, usar el objeto retornado por `guardar`, no asumir que el objeto original ya tiene ID actualizado.
 - `buscarPorId(Long id)` debe usar `EntityManager.find(...)` y retornar `Optional.empty()` si no existe.
 - `listarActivos()` debe usar JPQL con filtro `eliminado = false`.
 - `eliminarLogico(Long id)` debe buscar por ID, marcar `eliminado = true`, persistir el cambio y retornar `true` si encontró el registro. Debe retornar `false` si no encontró el registro.
@@ -301,6 +324,8 @@ Alta exitosa:
 Producto creado correctamente. ID generado: 10 | Categoria: Bebidas
 ```
 
+Los valores `1` y `10` son ejemplos. Con IDs autogenerados, el número real depende de la secuencia de la base.
+
 Baja exitosa:
 
 ```text
@@ -359,12 +384,21 @@ Ejecutar este flujo completo antes de entregar:
 19. Intentar modificar o dar de baja ID inexistentes y confirmar mensajes de error.
 20. salir del sistema sin excepciones.
 
+Durante estas pruebas no se debe ingresar ni calcular manualmente el ID de una entidad nueva. El sistema debe recibir los IDs únicamente después de que JPA persista el registro.
+
 ## Comandos de verificación
 
 Usar los comandos que correspondan al proyecto base. Como referencia:
 
 ```bash
 ./gradlew clean build
+```
+
+También se puede ejecutar la suite de pruebas sin limpiar artefactos previos:
+
+```bash
+./gradlew test
+./gradlew lintJavaFormatting
 ```
 
 Para ejecutar, usar la configuración existente del proyecto. Posibles alternativas:
@@ -379,7 +413,9 @@ O ejecutar desde el IDE la clase:
 com.tp.jpa.Main
 ```
 
-No tocar `build.gradle` salvo que el proyecto base ya lo requiera para ejecutar él `main` y sea imprescindible. Si se modifica, debe ser un cambio mínimo y documentado.
+El bloque `test` de `build.gradle` configura los tests de repositorios con H2 en memoria y esquema recreado. Esto evita que una base local vieja, creada antes de usar IDs identity, afecte las pruebas automatizadas.
+
+Si existe una base local en `data/jpa_db.mv.db` creada con el esquema anterior, borrarla o recrearla antes de probar altas nuevas con IDs autogenerados.
 
 ## Guion orientativo video entregable
 
