@@ -132,17 +132,17 @@ No implementar en esta historia:
 
 ## Checklist de terminado
 
-- [ ] Lista productos activos antes de pedir ID.
-- [ ] Maneja caso sin productos activos.
-- [ ] Valida ID inexistente.
-- [ ] Valida producto eliminado.
-- [ ] Muestra valores actuales.
-- [ ] Campo vacio conserva valor.
-- [ ] Valida precio > 0.
-- [ ] Valida stock >= 0.
-- [ ] Permite reasignar categoria activa.
-- [ ] Usa `ProductoRepository.guardar`.
-- [ ] Compila.
+- [x] Lista productos activos antes de pedir ID.
+- [x] Maneja caso sin productos activos.
+- [x] Valida ID inexistente.
+- [x] Valida producto eliminado.
+- [x] Muestra valores actuales.
+- [x] Campo vacio conserva valor.
+- [x] Valida precio > 0.
+- [x] Valida stock >= 0.
+- [x] Permite reasignar categoria activa.
+- [x] Usa `ProductoRepository.guardar`.
+- [x] Compila.
 
 ## Prompt sugerido para agente
 
