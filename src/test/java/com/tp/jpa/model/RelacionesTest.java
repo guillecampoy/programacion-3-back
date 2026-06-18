@@ -68,7 +68,7 @@ class RelacionesTest {
     Categoria categoria = Categoria.builder().nombre("Almacen").build();
     Producto producto = crearProducto("Cafe molido", 3200.0);
 
-    producto.setCategoria(categoria);
+    categoria.addProducto(producto);
 
     assertSame(categoria, producto.getCategoria());
     assertTrue(categoria.getProductos().contains(producto));

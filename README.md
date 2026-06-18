@@ -248,7 +248,7 @@ Tests relevantes:
 | HU-04 Modificar categoria | Completa | Lista activas, valida ID, muestra valores actuales, campos vacios conservan valor. |
 | HU-05 Baja categoria | Completa | Baja logica, valida inexistente o ya eliminada, no aparece en listados activos. |
 | HU-06 Alta producto | Completa | Lista categorias activas, valida precio/stock, relacion `ManyToOne`, ID visible. |
-| HU-07 Modificar producto | Completa | Lista activos, valida ID, muestra valores actuales, valida precio/stock. |
+| HU-07 Modificar producto | Completa | Lista activos, valida ID, muestra valores actuales, valida precio/stock y permite reasignar a categoria activa. |
 | HU-08 Baja producto | Completa | Baja logica, confirma con nombre, no aparece en listados activos. |
 | HU-09 Consulta JPQL | Completa | Reporte por categoria con JPQL tipado y parametro `:categoriaId`. |
 
@@ -339,7 +339,7 @@ En la consola:
 3. Probar validacion de precio `0` o stock negativo.
 4. Confirmar alta con ID generado y categoria asignada.
 5. Listar productos activos.
-6. Modificar nombre, precio o stock.
+6. Modificar nombre, precio, stock o categoria.
 7. Dar de baja un producto.
 8. Confirmar que no aparece en productos activos.
 
@@ -352,7 +352,7 @@ En la consola:
 1. Entrar a `Reportes`.
 2. Elegir `Productos por categoria`.
 3. Seleccionar una categoria activa.
-4. Mostrar productos con ID, nombre, precio y stock.
+4. Mostrar productos con ID, nombre, precio, stock y categoria.
 5. Luego de bajar un producto, repetir el reporte y confirmar que ya no aparece.
 
 ### 9. Tests y Cierre

@@ -12,15 +12,15 @@ public class ProductoRepository extends BaseRepository<Producto> {
   }
 
   public List<Producto> buscarPorCategoria(Long categoriaId) {
-      try (EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager()) {
-          // Consulta JPQL que obtiene los productos activos asociados a la categoria indicada por su
-          // ID.
-          TypedQuery<Producto> query =
-                  entityManager.createQuery(
-                          "select p from Producto p where p.categoria.id = :categoriaId and p.eliminado = false",
-                          Producto.class);
-          query.setParameter("categoriaId", categoriaId);
-          return query.getResultList();
-      }
+    try (EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager()) {
+      // Consulta JPQL que obtiene los productos activos asociados a la categoria indicada por su
+      // ID.
+      TypedQuery<Producto> query =
+          entityManager.createQuery(
+              "select p from Producto p where p.categoria.id = :categoriaId and p.eliminado = false",
+              Producto.class);
+      query.setParameter("categoriaId", categoriaId);
+      return query.getResultList();
+    }
   }
 }

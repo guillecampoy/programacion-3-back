@@ -115,7 +115,8 @@ public class CatalogoService {
     return productoRepository.guardar(producto);
   }
 
-  public Producto modificarProducto(Long id, String nombre, Double precio, Integer stock) {
+  public Producto modificarProducto(
+      Long id, String nombre, Double precio, Integer stock, Long categoriaId) {
     validarId(id, "producto");
     if (nombre != null && !nombre.isBlank()) {
       requerirTexto(nombre, "El nombre del producto");
@@ -126,8 +127,11 @@ public class CatalogoService {
     if (stock != null) {
       validarStock(stock);
     }
-
     Producto producto = obtenerProductoActivo(id);
+    Categoria nuevaCategoria = null;
+    if (categoriaId != null) {
+      nuevaCategoria = obtenerCategoriaActiva(categoriaId);
+    }
     if (nombre != null && !nombre.isBlank()) {
       producto.setNombre(nombre.trim());
     }
@@ -136,6 +140,9 @@ public class CatalogoService {
     }
     if (stock != null) {
       producto.setStock(stock);
+    }
+    if (nuevaCategoria != null) {
+      producto.setCategoria(referenciaCategoria(nuevaCategoria));
     }
     return productoRepository.guardar(producto);
   }

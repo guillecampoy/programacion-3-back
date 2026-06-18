@@ -46,18 +46,6 @@ public class Producto extends Base {
   }
 
   public void setCategoria(Categoria categoria) {
-    if (this.categoria == categoria) {
-      return;
-    }
-
-    Categoria categoriaAnterior = this.categoria;
     this.categoria = categoria;
-
-    if (categoriaAnterior != null) {
-      categoriaAnterior.getProductos().remove(this);
-    }
-    if (categoria != null && !categoria.getProductos().contains(this)) {
-      categoria.addProducto(this);
-    }
   }
 }

@@ -11,7 +11,7 @@
 
 ## Historia de usuario
 
-Como operador del sistema, quiero poder actualizar el nombre, precio y stock de un producto existente para mantener el catalogo actualizado sin recrear el registro.
+Como operador del sistema, quiero poder actualizar el nombre, precio, stock y categoria de un producto existente para mantener el catalogo actualizado sin recrear el registro.
 
 ## Dependencias
 
@@ -32,11 +32,12 @@ La opcion debe:
 3. Validar que exista.
 4. Validar que este activo.
 5. Mostrar valores actuales.
-6. Permitir editar nombre, precio y stock.
+6. Permitir editar nombre, precio, stock y categoria.
 7. Conservar valor anterior si el usuario deja un campo vacio.
 8. Validar precio mayor a 0 cuando se ingrese nuevo precio.
 9. Validar stock mayor o igual a 0 cuando se ingrese nuevo stock.
-10. Persistir cambios usando `ProductoRepository.guardar(...)`.
+10. Permitir reasignar el producto solo a una categoria activa existente.
+11. Persistir cambios usando `ProductoRepository.guardar(...)`.
 
 ## Menu esperado
 
@@ -57,9 +58,11 @@ Valores actuales:
 Nombre actual: Cafe
 Precio actual: 1500.00
 Stock actual: 20
+Categoria actual: Bebidas
 Nuevo nombre (enter para conservar): Cafe premium
 Nuevo precio (enter para conservar): 1800.00
 Nuevo stock (enter para conservar): 
+Nueva categoria (enter para conservar): 2
 Producto modificado correctamente.
 ```
 
@@ -71,7 +74,7 @@ Producto modificado correctamente.
 4. Campo vacio conserva valor anterior.
 5. Precio nuevo debe ser mayor a 0.
 6. Stock nuevo debe ser mayor o igual a 0.
-7. La consigna pide modificar nombre, precio y stock. No agregar cambio de descripcion ni categoria en esta historia.
+7. La consigna pide modificar nombre, precio, stock y categoria. No agregar cambio de descripcion en esta historia.
 
 ## Reglas tecnicas
 
@@ -106,8 +109,8 @@ Producto modificado correctamente.
 
 No implementar en esta historia:
 
-1. Cambio de categoria del producto.
-2. Cambio de descripcion del producto, porque la consigna de modificacion solo pide nombre, precio y stock.
+1. Cambio de descripcion del producto.
+2. Cambio a una categoria inexistente o inactiva.
 3. Baja de producto.
 4. Reporte por categoria.
 
@@ -117,14 +120,15 @@ No implementar en esta historia:
 2. Crear producto.
 3. Entrar a modificar producto.
 4. Confirmar que se listan productos activos.
-5. Cambiar solo nombre y dejar precio/stock vacios.
-6. Confirmar que conserva precio y stock.
-7. Intentar precio `0` y confirmar error.
-8. Intentar precio negativo y confirmar error.
-9. Intentar stock negativo y confirmar error.
-10. Ingresar valores validos y confirmar persistencia.
-11. Intentar ID inexistente.
-12. Confirmar mensaje de error.
+5. Cambiar solo nombre y dejar precio/stock/categoria vacios.
+6. Confirmar que conserva precio, stock y categoria.
+7. Intentar reasignar a una categoria inexistente o inactiva y confirmar error.
+8. Intentar precio `0` y confirmar error.
+9. Intentar precio negativo y confirmar error.
+10. Intentar stock negativo y confirmar error.
+11. Ingresar valores validos y confirmar persistencia.
+12. Intentar ID inexistente.
+13. Confirmar mensaje de error.
 
 ## Checklist de terminado
 
@@ -136,11 +140,12 @@ No implementar en esta historia:
 - [ ] Campo vacio conserva valor.
 - [ ] Valida precio > 0.
 - [ ] Valida stock >= 0.
+- [ ] Permite reasignar categoria activa.
 - [ ] Usa `ProductoRepository.guardar`.
 - [ ] Compila.
 
 ## Prompt sugerido para agente
 
 ```text
-Implementa la historia HU-07 en Main.java. Agrega modificacion de producto: listar productos activos, pedir ID, validar existencia y activo, mostrar valores actuales, permitir editar nombre, precio y stock conservando valores con enter vacio, validar precio > 0 y stock >= 0, persistir con ProductoRepository.guardar. No agregues cambio de categoria ni descripcion. Maneja errores de input. Compila al finalizar.
+Implementa la historia HU-07 en Main.java. Agrega modificacion de producto: listar productos activos, pedir ID, validar existencia y activo, mostrar valores actuales, permitir editar nombre, precio, stock y categoria conservando valores con enter vacio, validar precio > 0 y stock >= 0, permitir reasignar solo a categorias activas existentes y persistir con ProductoRepository.guardar. No agregues cambio de descripcion. Maneja errores de input. Compila al finalizar.
 ```

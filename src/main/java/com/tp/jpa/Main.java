@@ -299,15 +299,31 @@ public class Main {
           {"Nombre", producto.getNombre()},
           {"Descripcion", producto.getDescripcion()},
           {"Precio", producto.getPrecio().toString()},
-          {"Stock", String.valueOf(producto.getStock())}
+          {"Stock", String.valueOf(producto.getStock())},
+          {"Categoria", producto.getCategoria() == null ? "" : producto.getCategoria().getNombre()}
         });
+
+    List<Categoria> categoriasActivas = catalogoService.listarCategoriasActivas();
+    if (categoriasActivas.isEmpty()) {
+      imprimirMensaje(
+          "No hay categorias activas disponibles para reasignar. Deje el campo vacio para conservar la categoria actual.");
+    } else {
+      imprimirMensaje("Categorias activas disponibles para reasignar:");
+      imprimirCategorias(categoriasActivas);
+    }
+    Set<Long> idsCategoriasActivas =
+        categoriasActivas.stream()
+            .map(Categoria::getId)
+            .collect(java.util.stream.Collectors.toSet());
 
     String nombre = leerLinea(prompt("Nuevo nombre (enter para conservar)"));
     String precioTexto = leerLinea(prompt("Nuevo precio (enter para conservar)"));
     String stockTexto = leerLinea(prompt("Nuevo stock (enter para conservar)"));
+    String categoriaTexto = leerLinea(prompt("Nueva categoria (enter para conservar)"));
 
     Double nuevoPrecio = null;
     Integer nuevoStock = null;
+    Long nuevaCategoriaId = null;
     if (!precioTexto.isBlank()) {
       try {
         nuevoPrecio = Double.parseDouble(precioTexto.trim());
@@ -332,9 +348,25 @@ public class Main {
         return;
       }
     }
+    if (!categoriaTexto.isBlank()) {
+      try {
+        nuevaCategoriaId = Long.parseLong(categoriaTexto.trim());
+      } catch (NumberFormatException exception) {
+        imprimirError("Error: ingrese un ID numerico mayor a 0 para la categoria.");
+        return;
+      }
+      if (nuevaCategoriaId <= 0) {
+        imprimirError("Error: ingrese un ID numerico mayor a 0 para la categoria.");
+        return;
+      }
+      if (!idsCategoriasActivas.contains(nuevaCategoriaId)) {
+        imprimirError("Error: no existe una categoria activa con el ID indicado.");
+        return;
+      }
+    }
 
     try {
-      catalogoService.modificarProducto(id, nombre, nuevoPrecio, nuevoStock);
+      catalogoService.modificarProducto(id, nombre, nuevoPrecio, nuevoStock, nuevaCategoriaId);
       imprimirMensaje("Producto modificado correctamente.");
     } catch (RuntimeException exception) {
       imprimirError("No se modifico el producto: " + exception.getMessage());

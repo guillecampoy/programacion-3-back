@@ -483,12 +483,46 @@ class MainTest {
     catRepo.add(cat);
     Producto prod = crearProducto(1, "Original", 100.0, 5, cat);
     prodRepo.add(prod);
-    Scanner scanner = new Scanner("2\n2\n1\nModificado\n\n\n0\n0\n");
+    Scanner scanner = new Scanner("2\n2\n1\nModificado\n\n\n\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
     assertTrue(output.contains("Producto modificado correctamente"));
     assertEquals("Modificado", prodRepo.buscarPorId(1L).map(Producto::getNombre).orElse(""));
+  }
+
+  @Test
+  void testModificarProductoReasignaCategoria() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    Categoria catOrigen = crearCategoria(1, "Bebidas");
+    Categoria catDestino = crearCategoria(2, "Snacks");
+    catRepo.add(catOrigen);
+    catRepo.add(catDestino);
+    Producto prod = crearProducto(1, "Original", 100.0, 5, catOrigen);
+    prodRepo.add(prod);
+    Scanner scanner = new Scanner("2\n2\n1\n\n\n\n2\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo);
+    ejecutar(main);
+    String output = outContent.toString();
+    assertTrue(output.contains("Producto modificado correctamente"));
+    assertEquals(2L, prodRepo.buscarPorId(1L).map(p -> p.getCategoria().getId()).orElse(-1L));
+  }
+
+  @Test
+  void testModificarProductoCategoriaInvalida() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    Categoria catOrigen = crearCategoria(1, "Bebidas");
+    catRepo.add(catOrigen);
+    Producto prod = crearProducto(1, "Original", 100.0, 5, catOrigen);
+    prodRepo.add(prod);
+    Scanner scanner = new Scanner("2\n2\n1\n\n\n\n99\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo);
+    ejecutar(main);
+    String output = outContent.toString();
+    assertTrue(output.contains("no existe una categoria activa"));
+    assertEquals(1L, prodRepo.buscarPorId(1L).map(p -> p.getCategoria().getId()).orElse(-1L));
   }
 
   @Test

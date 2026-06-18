@@ -92,12 +92,54 @@ class CatalogoServiceTest {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
-            () -> service.modificarProducto(1L, "Actualizado", -5.0, 9));
+            () -> service.modificarProducto(1L, "Actualizado", -5.0, 9, null));
 
     assertEquals("Error: el precio debe ser mayor a 0.", exception.getMessage());
     assertEquals("Cafe", producto.getNombre());
     assertEquals(100.0, producto.getPrecio());
     assertEquals(5, producto.getStock());
+    assertEquals(0, productoRepository.guardarLlamadas);
+  }
+
+  @Test
+  void modificarProductoPermiteReasignarCategoriaActiva() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    Categoria categoriaOrigen = crearCategoria(1L, "Bebidas", false);
+    Categoria categoriaDestino = crearCategoria(2L, "Snacks", false);
+    Producto producto = crearProducto(1L, "Cafe", categoriaOrigen, false);
+    categoriaRepository.add(categoriaOrigen);
+    categoriaRepository.add(categoriaDestino);
+    productoRepository.add(producto);
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    Producto modificado = service.modificarProducto(1L, "Cafe premium", null, null, 2L);
+
+    assertEquals("Cafe premium", modificado.getNombre());
+    assertEquals(2L, modificado.getCategoria().getId());
+    assertTrue(productoRepository.guardarLlamadas > 0);
+  }
+
+  @Test
+  void modificarProductoRechazaCategoriaInactiva() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    Categoria categoriaOrigen = crearCategoria(1L, "Bebidas", false);
+    Categoria categoriaDestino = crearCategoria(2L, "Snacks", true);
+    Producto producto = crearProducto(1L, "Cafe", categoriaOrigen, false);
+    categoriaRepository.add(categoriaOrigen);
+    categoriaRepository.add(categoriaDestino);
+    productoRepository.add(producto);
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> service.modificarProducto(1L, null, null, null, 2L));
+
+    assertEquals(
+        "Error: no existe una categoria activa con el ID indicado.", exception.getMessage());
+    assertEquals(1L, productoRepository.buscarPorId(1L).orElseThrow().getCategoria().getId());
     assertEquals(0, productoRepository.guardarLlamadas);
   }
 
