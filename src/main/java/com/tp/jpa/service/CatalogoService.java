@@ -89,10 +89,17 @@ public class CatalogoService {
   }
 
   public Producto crearProducto(
-      Long categoriaId, String nombre, String descripcion, double precio, int stock) {
+      Long categoriaId,
+      String nombre,
+      String descripcion,
+      double precio,
+      int stock,
+      String imagen,
+      boolean disponible) {
     validarId(categoriaId, "categoria");
     String nombreNormalizado = requerirTexto(nombre, "El nombre del producto");
     String descripcionNormalizada = requerirTexto(descripcion, "La descripcion del producto");
+    String imagenNormalizada = requerirTexto(imagen, "La imagen del producto");
     validarPrecio(precio);
     validarStock(stock);
 
@@ -102,8 +109,8 @@ public class CatalogoService {
     producto.setDescripcion(descripcionNormalizada);
     producto.setPrecio(precio);
     producto.setStock(stock);
-    producto.setImagen("sin-imagen");
-    producto.setDisponible(true);
+    producto.setImagen(imagenNormalizada);
+    producto.setDisponible(disponible);
     producto.setEliminado(false);
     producto.setCreatedAt(LocalDateTime.now());
     producto.setCategoria(referenciaCategoria(categoria));

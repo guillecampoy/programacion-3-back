@@ -494,10 +494,13 @@ public class Main {
     String descripcion = entrada.leerTextoNoVacio(prompt("Descripcion"));
     double precio = entrada.leerDecimal(prompt("Precio"), 0.01);
     int stock = entrada.leerEntero(prompt("Stock"), 0);
+    String imagen = entrada.leerTextoNoVacio(prompt("Imagen"));
+    boolean disponible = entrada.leerBooleano(prompt("Disponible (s/n)"));
 
     try {
       Producto guardado =
-          catalogoService.crearProducto(categoriaId, nombre, descripcion, precio, stock);
+          catalogoService.crearProducto(
+              categoriaId, nombre, descripcion, precio, stock, imagen, disponible);
       imprimirMensaje(
           "Producto creado correctamente. ID generado: "
               + guardado.getId()

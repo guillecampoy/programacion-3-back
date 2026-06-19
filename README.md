@@ -139,6 +139,13 @@ HU-07 queda implementada en la baja logica de categorias:
 3. La confirmacion muestra el nombre de la categoria dada de baja.
 4. La categoria deja de aparecer en los listados activos.
 
+HU-08 queda implementada en el alta de productos:
+
+1. La consola lista categorias activas antes de pedir los datos del producto.
+2. El alta solicita nombre, descripcion, precio, stock, imagen y disponible.
+3. La categoria seleccionada se asocia al producto guardado.
+4. El producto se persiste con `eliminado = false` y se muestra el ID generado.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:

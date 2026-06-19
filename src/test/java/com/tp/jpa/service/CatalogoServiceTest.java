@@ -37,12 +37,15 @@ class CatalogoServiceTest {
     categoriaRepository.add(categoria);
     CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
 
-    Producto producto = service.crearProducto(7L, "Cafe", "Cafe molido", 1500.0, 10);
+    Producto producto =
+        service.crearProducto(7L, "Cafe", "Cafe molido", 1500.0, 10, "cafe.png", false);
 
     assertTrue(productoRepository.ultimoGuardadoLlegoSinId);
     assertEquals(1L, producto.getId());
     assertEquals("Cafe", producto.getNombre());
     assertEquals(7L, producto.getCategoria().getId());
+    assertEquals("cafe.png", producto.getImagen());
+    assertFalse(producto.getDisponible());
   }
 
   @Test
@@ -110,14 +113,30 @@ class CatalogoServiceTest {
     IllegalArgumentException precioException =
         assertThrows(
             IllegalArgumentException.class,
-            () -> service.crearProducto(1L, "Cafe", "Cafe molido", 0.0, 10));
+            () -> service.crearProducto(1L, "Cafe", "Cafe molido", 0.0, 10, "cafe.png", true));
     IllegalArgumentException stockException =
         assertThrows(
             IllegalArgumentException.class,
-            () -> service.crearProducto(1L, "Cafe", "Cafe molido", 1500.0, -1));
+            () -> service.crearProducto(1L, "Cafe", "Cafe molido", 1500.0, -1, "cafe.png", true));
 
     assertEquals("Error: el precio debe ser mayor a 0.", precioException.getMessage());
     assertEquals("Error: el stock debe ser mayor o igual a 0.", stockException.getMessage());
+    assertEquals(0, productoRepository.guardarLlamadas);
+  }
+
+  @Test
+  void crearProductoRechazaImagenVaciaAntesDeGuardar() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    categoriaRepository.add(crearCategoria(1L, "Bebidas", false));
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> service.crearProducto(1L, "Cafe", "Cafe molido", 1500.0, 10, " ", true));
+
+    assertEquals("Error: La imagen del producto es obligatorio.", exception.getMessage());
     assertEquals(0, productoRepository.guardarLlamadas);
   }
 

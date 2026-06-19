@@ -456,12 +456,14 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     Categoria cat = crearCategoria(1, "Bebidas");
     catRepo.add(cat);
-    Scanner scanner = new Scanner("2\n1\n1\nCafe\nCafe molido\n1500.00\n10\n0\n0\n");
+    Scanner scanner =
+        new Scanner("2\n1\n1\nCafe\nCafe molido\n1500.00\n10\ncafe.png\nsi\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
     assertTrue(output.contains("Producto creado correctamente"));
     assertTrue(prodRepo.listarActivos().stream().anyMatch(p -> p.getNombre().equals("Cafe")));
+    assertEquals("cafe.png", prodRepo.buscarPorId(1L).map(Producto::getImagen).orElse(""));
   }
 
   @Test
@@ -481,7 +483,8 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     Categoria cat = crearCategoria(1, "Bebidas");
     catRepo.add(cat);
-    Scanner scanner = new Scanner("2\n1\n1\nTe\nTe verde\n0\n10.50\n5\n0\n0\n");
+    Scanner scanner =
+        new Scanner("2\n1\n1\nTe\nTe verde\n0\n10.50\n5\nte.png\nno\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
@@ -494,7 +497,8 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     Categoria cat = crearCategoria(1, "Bebidas");
     catRepo.add(cat);
-    Scanner scanner = new Scanner("2\n1\n1\nAgua\nAgua mineral\n1.50\n-1\n5\n0\n0\n");
+    Scanner scanner =
+        new Scanner("2\n1\n1\nAgua\nAgua mineral\n1.50\n-1\n5\nagua.png\nsi\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
@@ -717,5 +721,7 @@ class MainTest {
     assertThrows(IllegalArgumentException.class, () -> p.setPrecio(0.0));
     assertThrows(IllegalArgumentException.class, () -> p.setPrecio(-1.0));
     assertThrows(IllegalArgumentException.class, () -> p.setStock(-1));
+    assertThrows(IllegalArgumentException.class, () -> p.setImagen(""));
+    assertThrows(IllegalArgumentException.class, () -> p.setDisponible(null));
   }
 }
