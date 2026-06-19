@@ -104,6 +104,13 @@ HU-02 queda implementada en los repositorios concretos:
 3. `ProductoRepository.buscarPorCategoria(Long)` ejecuta JPQL tipado con `:catId` y `eliminado = false`.
 4. La consulta devuelve solo productos activos de la categoria indicada.
 
+HU-03 queda implementada en `UsuarioRepository`:
+
+1. `UsuarioRepository` extiende `BaseRepository<Usuario>`.
+2. `buscarPorMail(String)` devuelve `Optional<Usuario>`.
+3. La busqueda soporta coincidencia parcial y excluye usuarios eliminados.
+4. La consulta usa JPQL tipado con `:mail`, `getResultList()` y cierre explicito del `EntityManager`.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
