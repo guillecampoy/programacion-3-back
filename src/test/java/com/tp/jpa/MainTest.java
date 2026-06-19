@@ -582,7 +582,9 @@ class MainTest {
     ejecutar(main);
     String output = outContent.toString();
     assertTrue(output.contains("Producto dado de baja correctamente"));
+    assertTrue(output.contains("ParaBorrar"));
     assertTrue(prodRepo.buscarPorId(1L).map(Producto::getEliminado).orElse(false));
+    assertTrue(prodRepo.listarActivos().stream().noneMatch(p -> p.getId().equals(1L)));
   }
 
   @Test

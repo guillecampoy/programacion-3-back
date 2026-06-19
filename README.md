@@ -153,6 +153,13 @@ HU-09 queda implementada en la modificacion de productos:
 3. Los campos en blanco conservan el valor previo.
 4. La modificacion valida precio y stock antes de persistir.
 
+HU-10 queda implementada en la baja de productos:
+
+1. La consola usa la opcion de baja del submenu de productos.
+2. El producto se marca como eliminado sin borrar el registro.
+3. La confirmacion muestra el nombre del producto dado de baja.
+4. El producto deja de aparecer en los listados activos.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:

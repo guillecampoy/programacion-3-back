@@ -269,6 +269,39 @@ class CatalogoServiceTest {
   }
 
   @Test
+  void bajaProductoMarcaEliminadoYNoApareceEnActivos() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    Categoria categoria = crearCategoria(1L, "Bebidas", false);
+    Producto producto = crearProducto(1L, "Cafe", categoria, false);
+    categoriaRepository.add(categoria);
+    productoRepository.add(producto);
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    Producto dadoDeBaja = service.bajaProducto(1L);
+
+    assertTrue(dadoDeBaja.getEliminado());
+    assertTrue(productoRepository.buscarPorId(1L).orElseThrow().getEliminado());
+    assertTrue(productoRepository.listarActivos().stream().noneMatch(p -> p.getId().equals(1L)));
+  }
+
+  @Test
+  void bajaProductoRechazaSegundoIntento() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    Categoria categoria = crearCategoria(1L, "Bebidas", false);
+    Producto producto = crearProducto(1L, "Cafe", categoria, true);
+    categoriaRepository.add(categoria);
+    productoRepository.add(producto);
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    IllegalStateException exception =
+        assertThrows(IllegalStateException.class, () -> service.bajaProducto(1L));
+
+    assertEquals("Error: el producto ya se encuentra dado de baja.", exception.getMessage());
+  }
+
+  @Test
   void bajaCategoriaSoloDesactivaLaCategoriaYConservaLosProductos() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
