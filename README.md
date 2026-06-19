@@ -254,5 +254,3 @@ Tests relevantes:
 
 ### [Video de Demostracion](https://youtu.be/HgKRvewNqAE)
 - https://youtu.be/HgKRvewNqAE
-
-
