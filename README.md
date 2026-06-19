@@ -1,32 +1,41 @@
-# Parcial 2 - Programacion III - JPA
+# Programacion III - Backend JPA
 
-Entrega final del parcial de Java Persistence API sobre repositorios, ABM de categorias/productos y consulta JPQL por categoria.
+Backend de consola para el TPI de Programacion III con Java, Gradle, JPA/Hibernate y H2 en archivo.
 
-El proyecto queda unificado bajo la paqueteria `com.tp.jpa`, con una unica clase de entrada `com.tp.jpa.Main`. El modelo respeta las relaciones del UML de `docs/diagrama.puml`; ese archivo no fue modificado.
+Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y deja preparada la base para las historias siguientes sin implementar nuevas historias de usuario en este paso.
 
-## Funcionalidades
+## Estado actual
 
-La aplicacion de consola permite:
+Lo que hoy expone la aplicacion desde consola es:
 
 1. ABM de categorias.
 2. ABM de productos.
 3. Listado de categorias activas.
 4. Listado de productos activos.
-5. Reversion de baja logica en categorias y productos.
-6. Baja logica mediante el campo `eliminado`.
-7. Baja logica en cascada de productos cuando se elimina una categoria.
-8. Reporte de productos activos por categoria usando JPQL.
-9. Persistencia JPA/Hibernate con H2.
-10. Carga inicial de datos de ejemplo.
+5. Baja logica y restauracion de categorias.
+6. Baja logica y restauracion de productos.
+7. Reporte de productos activos por categoria.
+8. Regeneracion de la base local con semilla inicial.
 
-## Estructura
+El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, aunque esas entidades no forman parte del menu operativo actual.
+
+## Documentacion del proyecto
+
+La carpeta `docs/` funciona como guia de trabajo y backlog.
+
+1. [`docs/README.md`](docs/README.md): orden recomendado de historias y validacion de entrega.
+2. [`docs/00_contexto_restricciones.md`](docs/00_contexto_restricciones.md): reglas tecnicas, estructura esperada y restricciones de implementacion.
+3. [`docs/historias/`](docs/historias/): historias de usuario individuales para el recorrido incremental del backend.
+4. [`docs/diagrama.puml`](docs/diagrama.puml): UML de referencia del modelo. Se conserva sin cambios de relaciones.
+
+## Estructura actual
 
 ```text
 src/main/java/com/tp/jpa/
-  Main.java                      # unica entrada de consola
-  H2LocalConsole.java            # consola web H2 opcional
+  Main.java                 # menu de consola
+  H2LocalConsole.java       # consola web de H2
   model/
-    Base.java                    # clase base con id, eliminado y createdAt
+    Base.java
     Categoria.java
     Producto.java
     Usuario.java
@@ -42,89 +51,71 @@ src/main/java/com/tp/jpa/
     CategoriaRepository.java
     ProductoRepository.java
   service/
-    CatalogoService.java         # reglas de negocio y validaciones
+    CatalogoService.java
   seed/
+    DatosSemilla.java
     DatosSemillaFactory.java
     PersistenciaInicial.java
   util/
     JPAUtil.java
     ConsolaUtils.java
     EntradaValidada.java
+
+src/test/java/com/tp/jpa/
+  MainTest.java
+  integration/JpaIntegrationTest.java
+  model/RelacionesTest.java
+  repository/CategoriaRepositoryTest.java
+  repository/ProductoRepositoryTest.java
+  seed/PersistenciaInicialTest.java
+  service/CatalogoServiceTest.java
+  util/EntradaValidadaTest.java
 ```
 
-Los tests estan en `src/test/java/com/tp/jpa/` y cubren entidades, repositorios, servicio, consola, persistencia inicial e integracion JPA.
+## Modelo de dominio
 
-## Modelo
+Las entidades principales respetan la base conceptual del UML:
 
-Las entidades conservan las relaciones indicadas en el UML:
+1. `Base` centraliza `id`, `eliminado` y `createdAt`.
+2. `Categoria` agrupa productos.
+3. `Producto` referencia una categoria.
+4. `Usuario` se relaciona con pedidos.
+5. `Pedido` implementa `Calculable` y compone detalles.
+6. `DetallePedido` referencia un producto.
+7. `UsuarioDTO` existe como representacion de lectura.
 
-1. `Usuario` hereda de `Base` y se relaciona con muchos `Pedido`.
-2. `Categoria` hereda de `Base` y agrupa muchos `Producto`.
-3. `Producto` hereda de `Base` y referencia una `Categoria`.
-4. `Pedido` hereda de `Base`, implementa `Calculable`, pertenece a un `Usuario` y compone muchos `DetallePedido`.
-5. `DetallePedido` hereda de `Base` y referencia un `Producto`.
-6. `UsuarioDTO` depende de `Usuario`.
-
-No se modifico `docs/diagrama.puml`.
-
-## IDs Autogenerados
-
-`Base` centraliza el identificador y delega la generacion a JPA:
-
-```java
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
-```
-
-Las altas crean entidades con `id == null`. El ID se obtiene despues de persistir usando la instancia retornada por `guardar(...)` o la entidad administrada por JPA.
-
-La semilla tampoco fija IDs manuales; arma relaciones con referencias a objetos.
+La relacion entre clases se mantiene en el marco de lo que ya esta alcanzado por el UML del proyecto. Este README solo describe la estructura actual; el diagrama de clases no se modifica aqui.
 
 ## Repositorios
 
-`BaseRepository<T>` implementa:
+HU-01 queda implementada en `BaseRepository<T>`, que resuelve la infraestructura comun:
 
-```java
-public T guardar(T entity);
-public Optional<T> buscarPorId(Long id);
-public List<T> listarActivos();
-public T cambiarEstadoEliminado(Long id, boolean eliminado);
-```
+1. Guardado con transaccion propia.
+2. Busqueda por id.
+3. Listado de activos.
+4. Borrado logico con `eliminarLogico()`.
+5. Compatibilidad con `cambiarEstadoEliminado()` para el resto del proyecto.
+6. Obtencion del siguiente id logico cuando hace falta para pruebas o utilidades.
 
-Cada metodo abre y cierra su propio `EntityManager`. Las escrituras usan transaccion, `merge()` y rollback ante error.
+`ProductoRepository` agrega la consulta JPQL para filtrar productos por categoria activa.
 
-`ProductoRepository.buscarPorCategoria(Long categoriaId)` usa JPQL tipado y parametro nombrado:
+## Capa de servicio
 
-```jpql
-select p from Producto p
-where p.categoria.id = :categoriaId
-  and p.eliminado = false
-```
+`CatalogoService` concentra la logica de negocio que usa la consola:
 
-## Capa de Servicio
-
-`CatalogoService` separa la logica de negocio de la consola. Se encarga de:
-
-1. Crear categorias y productos.
-2. Modificar categorias y productos.
+1. Crear y modificar categorias.
+2. Crear y modificar productos.
 3. Ejecutar bajas logicas.
-4. Validar existencia y estado activo.
-5. Validar entrada antes de construir o mutar entidades.
-6. Obtener listados activos para consola y reportes.
-7. Al dar de baja una categoria, desactivar en cascada sus productos activos y mostrar un breve reporte de los afectados.
+4. Restaurar registros eliminados.
+5. Validar ids, textos, precio y stock.
+6. Resolver el impacto de eliminar una categoria sobre sus productos activos.
+7. Buscar productos activos por categoria.
 
-Validaciones defensivas en servicio:
+La consola delega en esta capa para evitar mezclar input de usuario con reglas de negocio.
 
-1. IDs obligatorios y mayores a 0.
-2. Nombre y descripcion obligatorios en altas.
-3. Precio de producto mayor a 0.
-4. Stock mayor o igual a 0.
-5. En modificaciones, campos vacios conservan el valor previo; campos presentes se validan antes de tocar la entidad.
+## Consola
 
-## Menu de Consola
-
-Menu principal:
+Menu principal actual:
 
 ```text
 Sistema JPA - Categorias y Productos
@@ -135,7 +126,7 @@ Sistema JPA - Categorias y Productos
 0. Salir
 ```
 
-Categorias:
+Submenu de categorias:
 
 ```text
 1. Alta de categoria
@@ -146,7 +137,7 @@ Categorias:
 0. Volver
 ```
 
-Productos:
+Submenu de productos:
 
 ```text
 1. Alta de producto
@@ -157,30 +148,16 @@ Productos:
 0. Volver
 ```
 
-Reportes:
+Submenu de reportes:
 
 ```text
 1. Productos por categoria
 0. Volver
 ```
 
-## Configuracion JPA
+## Persistencia
 
-La unidad de persistencia es `miUnidad`, definida en:
-
-```text
-src/main/resources/META-INF/persistence.xml
-```
-
-Entidades registradas:
-
-```text
-com.tp.jpa.model.Usuario
-com.tp.jpa.model.Categoria
-com.tp.jpa.model.Producto
-com.tp.jpa.model.Pedido
-com.tp.jpa.model.DetallePedido
-```
+La unidad de persistencia es `miUnidad`, definida en `src/main/resources/META-INF/persistence.xml`.
 
 La base local usa H2 en archivo:
 
@@ -188,69 +165,37 @@ La base local usa H2 en archivo:
 jdbc:h2:file:./data/jpa_db
 ```
 
-La base local no se versiona. Hibernate la crea automaticamente al ejecutar la aplicacion si no existe. La configuracion local usa `hibernate.hbm2ddl.auto=update`, por lo que no borra datos en cada arranque.
+Puntos clave:
 
-Al iniciar la aplicacion se aplica la semilla solo cuando la base local no existe o no tiene registros. Para volver a cargar una base limpia desde cero, usar la opcion `Regenerar datos` del menu principal; esa accion borra los archivos locales de H2, recrea el esquema nuevo y vuelve a aplicar la semilla.
-La opcion `Revertir baja logica` muestra solo registros eliminados para evitar restauraciones accidentales.
-La baja logica de una categoria desactiva tambien sus productos activos asociados para evitar dejar referencias funcionales incongruentes; la consola muestra un reporte breve de esos productos.
+1. Hibernate administra el esquema con `hbm2ddl.auto=update` en ejecucion local.
+2. `JPAUtil` mantiene una `EntityManagerFactory` unica.
+3. `PersistenciaInicial` carga datos solo si corresponde.
+4. La opcion `Regenerar datos` elimina la base local y vuelve a aplicar la semilla.
 
-## Ejecucion
+## Semilla y datos
 
-Compilar:
+La semilla inicial prepara datos reales para trabajar con la consola y para sostener los tests de integracion.
 
-```bash
-./gradlew build
-```
+1. `PersistenciaInicial` decide si hay que cargar datos.
+2. `DatosSemillaFactory` construye el escenario inicial.
+3. La carga se apoya en relaciones JPA reales, no en ids manuales sueltos.
 
-Ejecutar la aplicacion:
+## Validacion
 
-```bash
-./gradlew run
-```
-
-Clase principal:
-
-```text
-com.tp.jpa.Main
-```
-
-## Verificacion
-
-Suite completa:
+La base del proyecto ya pasa la suite de tests:
 
 ```bash
 ./gradlew test
 ```
 
-Lint basico de formato:
+La validacion cubre el contrato de HU-01 con pruebas sobre guardado nuevo, guardado con id existente, busqueda, listado activo y borrado logico.
+
+Y la aplicacion puede ejecutarse desde consola con:
 
 ```bash
-./gradlew lintJavaFormatting
+./gradlew run
 ```
 
-Tests relevantes:
+## Proximo tramo
 
-```bash
-./gradlew test --tests com.tp.jpa.MainTest
-./gradlew test --tests com.tp.jpa.service.CatalogoServiceTest
-./gradlew test --tests com.tp.jpa.repository.CategoriaRepositoryTest
-./gradlew test --tests com.tp.jpa.repository.ProductoRepositoryTest
-./gradlew test --tests com.tp.jpa.integration.JpaIntegrationTest
-```
-
-## Correspondencia con Historias
-
-| Historia | Estado | Implementacion |
-|----------|--------|----------------|
-| HU-01 BaseRepository | Completa | `BaseRepository<T>` con `guardar`, `buscarPorId`, `listarActivos`, `eliminarLogico`, transacciones y cierre de `EntityManager`. |
-| HU-02 Repositorios especificos | Completa | `CategoriaRepository` y `ProductoRepository`, incluyendo `buscarPorCategoria`. |
-| HU-03 Alta categoria | Completa | Menu de categorias, validacion de nombre/descripcion, ID visible. |
-| HU-04 Modificar categoria | Completa | Lista activas, valida ID, muestra valores actuales, campos vacios conservan valor. |
-| HU-05 Baja categoria | Completa | Baja logica, valida inexistente o ya eliminada, no aparece en listados activos. |
-| HU-06 Alta producto | Completa | Lista categorias activas, valida precio/stock, relacion `ManyToOne`, ID visible. |
-| HU-07 Modificar producto | Completa | Lista activos, valida ID, muestra valores actuales, valida precio/stock y permite reasignar a categoria activa. |
-| HU-08 Baja producto | Completa | Baja logica, confirma con nombre, no aparece en listados activos. |
-| HU-09 Consulta JPQL | Completa | Reporte por categoria con JPQL tipado y parametro `:categoriaId`. |
-
-### [Video de Demostracion](https://youtu.be/HgKRvewNqAE)
-- https://youtu.be/HgKRvewNqAE
+La documentacion de `docs/historias/` marca el backlog incremental que sigue sobre esta base. El objetivo de esa carpeta es guiar la evolucion por historias sin reescribir la estructura ya consolidada ni tocar el UML de referencia.

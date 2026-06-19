@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 
 public abstract class BaseRepository<T> {
   private final Class<T> entityClass;
@@ -17,10 +18,17 @@ public abstract class BaseRepository<T> {
   public T guardar(T entity) {
     EntityManager entityManager = crearEntityManager();
     try {
+      Objects.requireNonNull(entity, "La entidad no puede ser nula.");
       entityManager.getTransaction().begin();
-      T merged = entityManager.merge(entity);
+      T persistido;
+      if (tieneId(entity)) {
+        persistido = entityManager.merge(entity);
+      } else {
+        entityManager.persist(entity);
+        persistido = entity;
+      }
       entityManager.getTransaction().commit();
-      return merged;
+      return persistido;
     } catch (RuntimeException exception) {
       if (entityManager.getTransaction().isActive()) {
         entityManager.getTransaction().rollback();
@@ -63,19 +71,19 @@ public abstract class BaseRepository<T> {
    * @param eliminado modificador que indica si se borra o restaura
    * @return
    */
-  public T cambiarEstadoEliminado(Long id, boolean eliminado) {
+  public boolean eliminarLogico(Long id) {
     EntityManager entityManager = crearEntityManager();
     try {
       entityManager.getTransaction().begin();
       T entity = entityManager.find(entityClass, id);
       if (entity == null) {
         entityManager.getTransaction().commit();
-        return null;
+        return false;
       }
-      marcarEliminado(entity, eliminado);
-      T merged = entityManager.merge(entity);
+      marcarEliminado(entity, true);
+      entityManager.merge(entity);
       entityManager.getTransaction().commit();
-      return merged;
+      return true;
     } catch (RuntimeException exception) {
       if (entityManager.getTransaction().isActive()) {
         entityManager.getTransaction().rollback();
@@ -84,6 +92,15 @@ public abstract class BaseRepository<T> {
     } finally {
       entityManager.close();
     }
+  }
+
+  public T cambiarEstadoEliminado(Long id, boolean eliminado) {
+    if (eliminado) {
+      eliminarLogico(id);
+    } else {
+      restaurarLogico(id);
+    }
+    return buscarPorId(id).orElse(null);
   }
 
   public long siguienteId() {
@@ -101,6 +118,36 @@ public abstract class BaseRepository<T> {
       throw new IllegalArgumentException("La entidad no hereda de Base: " + entityClass.getName());
     }
     base.setEliminado(eliminado);
+  }
+
+  private boolean tieneId(T entity) {
+    if (!(entity instanceof Base base)) {
+      throw new IllegalArgumentException("La entidad no hereda de Base: " + entityClass.getName());
+    }
+    return base.getId() != null;
+  }
+
+  private boolean restaurarLogico(Long id) {
+    EntityManager entityManager = crearEntityManager();
+    try {
+      entityManager.getTransaction().begin();
+      T entity = entityManager.find(entityClass, id);
+      if (entity == null) {
+        entityManager.getTransaction().commit();
+        return false;
+      }
+      marcarEliminado(entity, false);
+      entityManager.merge(entity);
+      entityManager.getTransaction().commit();
+      return true;
+    } catch (RuntimeException exception) {
+      if (entityManager.getTransaction().isActive()) {
+        entityManager.getTransaction().rollback();
+      }
+      throw exception;
+    } finally {
+      entityManager.close();
+    }
   }
 
   private EntityManager crearEntityManager() {
