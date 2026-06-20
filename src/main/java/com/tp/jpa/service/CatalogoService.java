@@ -8,6 +8,7 @@ import com.tp.jpa.model.enums.Estado;
 import com.tp.jpa.model.enums.FormaPago;
 import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
+import com.tp.jpa.repository.PedidoRepository;
 import com.tp.jpa.repository.ProductoRepository;
 import com.tp.jpa.repository.UsuarioRepository;
 import com.tp.jpa.util.JPAUtil;
@@ -21,6 +22,7 @@ public class CatalogoService {
   private final CategoriaRepository categoriaRepository;
   private final ProductoRepository productoRepository;
   private final UsuarioRepository usuarioRepository;
+  private final PedidoRepository pedidoRepository;
 
   public record BajaCategoriaResultado(Categoria categoria, List<Producto> productosDadosDeBaja) {}
 
@@ -28,16 +30,25 @@ public class CatalogoService {
 
   public CatalogoService(
       CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
-    this(categoriaRepository, productoRepository, new UsuarioRepository());
+    this(categoriaRepository, productoRepository, new UsuarioRepository(), new PedidoRepository());
   }
 
   public CatalogoService(
       CategoriaRepository categoriaRepository,
       ProductoRepository productoRepository,
       UsuarioRepository usuarioRepository) {
+    this(categoriaRepository, productoRepository, usuarioRepository, new PedidoRepository());
+  }
+
+  public CatalogoService(
+      CategoriaRepository categoriaRepository,
+      ProductoRepository productoRepository,
+      UsuarioRepository usuarioRepository,
+      PedidoRepository pedidoRepository) {
     this.categoriaRepository = categoriaRepository;
     this.productoRepository = productoRepository;
     this.usuarioRepository = usuarioRepository;
+    this.pedidoRepository = pedidoRepository;
   }
 
   public List<Categoria> listarCategoriasActivas() {
@@ -132,6 +143,27 @@ public class CatalogoService {
     } finally {
       entityManager.close();
     }
+  }
+
+  public Pedido obtenerPedidoActivo(Long id) {
+    validarId(id, "pedido");
+    Pedido pedido =
+        pedidoRepository
+            .buscarPorId(id)
+            .orElseThrow(
+                () -> new IllegalArgumentException("Error: no existe un pedido activo con el ID indicado."));
+    if (Boolean.TRUE.equals(pedido.getEliminado())) {
+      throw new IllegalArgumentException("Error: no existe un pedido activo con el ID indicado.");
+    }
+    return pedido;
+  }
+
+  public Pedido cambiarEstadoPedido(Long id, Estado nuevoEstado) {
+    validarId(id, "pedido");
+    validarEstadoPedido(nuevoEstado);
+    Pedido pedido = obtenerPedidoActivo(id);
+    pedido.setEstado(nuevoEstado);
+    return pedidoRepository.guardar(pedido);
   }
 
   public Usuario obtenerUsuarioActivo(Long id) {
@@ -439,6 +471,12 @@ public class CatalogoService {
   private void validarRol(Rol rol) {
     if (rol == null) {
       throw new IllegalArgumentException("Error: el rol del usuario es obligatorio.");
+    }
+  }
+
+  private void validarEstadoPedido(Estado estado) {
+    if (estado == null) {
+      throw new IllegalArgumentException("Error: el estado del pedido es obligatorio.");
     }
   }
 

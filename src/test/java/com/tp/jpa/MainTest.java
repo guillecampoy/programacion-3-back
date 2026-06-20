@@ -231,6 +231,7 @@ class MainTest {
   static class FakeCatalogoService extends CatalogoService {
     private final List<Usuario> usuariosActivos;
     private final List<Producto> productosDisponibles;
+    private final Map<Long, Pedido> pedidos = new HashMap<>();
     private Pedido ultimoPedido;
 
     FakeCatalogoService(List<Usuario> usuariosActivos, List<Producto> productosDisponibles) {
@@ -274,6 +275,27 @@ class MainTest {
         pedido.addDetallePedido(lineaPedido.cantidad(), producto);
       }
       ultimoPedido = pedido;
+      pedidos.put(pedido.getId(), pedido);
+      return pedido;
+    }
+
+    void addPedido(Pedido pedido) {
+      pedidos.put(pedido.getId(), pedido);
+    }
+
+    @Override
+    public Pedido obtenerPedidoActivo(Long id) {
+      Pedido pedido = pedidos.get(id);
+      if (pedido == null || Boolean.TRUE.equals(pedido.getEliminado())) {
+        throw new IllegalArgumentException("Error: no existe un pedido activo con el ID indicado.");
+      }
+      return pedido;
+    }
+
+    @Override
+    public Pedido cambiarEstadoPedido(Long id, Estado nuevoEstado) {
+      Pedido pedido = obtenerPedidoActivo(id);
+      pedido.setEstado(nuevoEstado);
       return pedido;
     }
   }
@@ -953,6 +975,31 @@ class MainTest {
     assertTrue(output.contains("Pedido creado correctamente"));
     assertTrue(output.contains("Detalle del pedido"));
     assertTrue(output.contains("Cafe"));
+  }
+
+  @Test
+  void testCambiarEstadoPedidoDesdeMenuPedidos() {
+    Usuario usuario = crearUsuario(1L, "Ana", "ana@example.com", false);
+    FakeCatalogoService catalogoService = new FakeCatalogoService(List.of(usuario), List.of());
+    Pedido pedido = new Pedido();
+    pedido.setId(10L);
+    pedido.setFecha(java.time.LocalDate.now());
+    pedido.setEstado(Estado.PENDIENTE);
+    pedido.setFormaPago(FormaPago.EFECTIVO);
+    pedido.setUsuario(usuario);
+    pedido.setEliminado(false);
+    pedido.setCreatedAt(LocalDateTime.now());
+    catalogoService.addPedido(pedido);
+
+    Scanner scanner = new Scanner("6\n2\n10\n2\n0\n0\n");
+    Main main = new Main(scanner, catalogoService);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Cambiar estado de pedido"));
+    assertTrue(output.contains("Estado actual"));
+    assertTrue(output.contains("Pedido actualizado correctamente"));
+    assertTrue(output.contains("CONFIRMADO"));
   }
 
   @Test

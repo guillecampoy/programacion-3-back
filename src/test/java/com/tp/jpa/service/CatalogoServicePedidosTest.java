@@ -107,6 +107,65 @@ class CatalogoServicePedidosTest {
     assertEquals(10, productoRepository.buscarPorId(cafe.getId()).orElseThrow().getStock());
   }
 
+  @Test
+  void cambiarEstadoPedidoPersisteElNuevoEstado() {
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+    Usuario usuario = usuarioRepository.guardar(crearUsuario("ana@example.com"));
+    Categoria categoria = categoriaRepository.guardar(crearCategoria("Bebidas"));
+    Producto cafe = productoRepository.guardar(crearProducto(categoria, "Cafe", 10.0, 10, true));
+
+    Pedido pedido =
+        service.crearPedido(
+            usuario.getId(),
+            FormaPago.EFECTIVO,
+            List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 1)));
+
+    Pedido actualizado = service.cambiarEstadoPedido(pedido.getId(), Estado.CONFIRMADO);
+
+    assertEquals(Estado.CONFIRMADO, actualizado.getEstado());
+    assertEquals(1, actualizado.getDetallePedidos().size());
+    assertEquals(9, productoRepository.buscarPorId(cafe.getId()).orElseThrow().getStock());
+    assertEquals(
+        Estado.CONFIRMADO, pedidoRepository.buscarPorId(pedido.getId()).orElseThrow().getEstado());
+  }
+
+  @Test
+  void cambiarEstadoPedidoRechazaPedidoEliminado() {
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+    Usuario usuario = usuarioRepository.guardar(crearUsuario("ana@example.com"));
+    Categoria categoria = categoriaRepository.guardar(crearCategoria("Bebidas"));
+    Producto cafe = productoRepository.guardar(crearProducto(categoria, "Cafe", 10.0, 10, true));
+
+    Pedido pedido =
+        service.crearPedido(
+            usuario.getId(),
+            FormaPago.EFECTIVO,
+            List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 1)));
+    pedidoRepository.eliminarLogico(pedido.getId());
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> service.cambiarEstadoPedido(pedido.getId(), Estado.TERMINADO));
+
+    assertEquals("Error: no existe un pedido activo con el ID indicado.", exception.getMessage());
+  }
+
+  @Test
+  void cambiarEstadoPedidoRechazaPedidoInexistente() {
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> service.cambiarEstadoPedido(99L, Estado.CANCELADO));
+
+    assertEquals("Error: no existe un pedido activo con el ID indicado.", exception.getMessage());
+  }
+
   private Usuario crearUsuario(String mail) {
     Usuario usuario = new Usuario();
     usuario.setNombre("Ana");

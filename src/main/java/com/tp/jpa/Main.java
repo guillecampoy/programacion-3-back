@@ -12,6 +12,7 @@ import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Pedido;
 import com.tp.jpa.model.Producto;
 import com.tp.jpa.model.Usuario;
+import com.tp.jpa.model.enums.Estado;
 import com.tp.jpa.model.enums.FormaPago;
 import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
@@ -188,9 +189,10 @@ public class Main {
     boolean volver = false;
     while (!volver) {
       mostrarMenuPedidos();
-      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1"));
+      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
       switch (opcion) {
         case "1" -> altaPedido();
+        case "2" -> cambiarEstadoPedido();
         case "0" -> volver = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -672,6 +674,50 @@ public class Main {
     }
   }
 
+  private void cambiarEstadoPedido() {
+    imprimirTitulo("Cambiar estado de pedido");
+    long id =
+        entrada.leerLong(
+            prompt("Ingrese ID de pedido"),
+            valor -> valor > 0,
+            "Error: ingrese un ID numerico mayor a 0.");
+
+    Pedido pedido;
+    try {
+      pedido = catalogoService.obtenerPedidoActivo(id);
+    } catch (RuntimeException exception) {
+      imprimirError(exception.getMessage());
+      return;
+    }
+
+    imprimirMensaje("Estado actual: " + pedido.getEstado().name());
+    imprimirValoresActuales(new String[][] {{"Estado", pedido.getEstado().name()}});
+    System.out.println("Estados disponibles:");
+    imprimirOpcion("1", Estado.PENDIENTE.name());
+    imprimirOpcion("2", Estado.CONFIRMADO.name());
+    imprimirOpcion("3", Estado.TERMINADO.name());
+    imprimirOpcion("4", Estado.CANCELADO.name());
+
+    Estado nuevoEstado =
+        switch (entrada.leerOpcion(prompt("Seleccione nuevo estado"), Set.of("1", "2", "3", "4"))) {
+          case "1" -> Estado.PENDIENTE;
+          case "2" -> Estado.CONFIRMADO;
+          case "3" -> Estado.TERMINADO;
+          default -> Estado.CANCELADO;
+        };
+
+    try {
+      Pedido actualizado = catalogoService.cambiarEstadoPedido(id, nuevoEstado);
+      imprimirMensaje(
+          "Pedido actualizado correctamente. ID: "
+              + actualizado.getId()
+              + " | Estado: "
+              + actualizado.getEstado().name());
+    } catch (RuntimeException exception) {
+      imprimirError("No se pudo cambiar el estado del pedido: " + exception.getMessage());
+    }
+  }
+
   private void buscarUsuarioPorMail() {
     imprimirTitulo("Buscar usuario por mail");
     String mail = entrada.leerTextoNoVacio(prompt("Mail"));
@@ -970,6 +1016,7 @@ public class Main {
     System.out.println("Pedidos");
     System.out.println(SEPARADOR);
     imprimirOpcion("1", "Alta de pedido");
+    imprimirOpcion("2", "Cambiar estado de pedido");
     imprimirOpcion("0", "Volver");
     System.out.println(SEPARADOR);
   }
