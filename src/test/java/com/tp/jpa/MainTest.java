@@ -679,7 +679,10 @@ class MainTest {
     ejecutar(main);
     String output = outContent.toString();
     assertTrue(output.contains("Productos activos de la categoria"));
+    assertTrue(output.contains("ID"));
     assertTrue(output.contains("Cafe"));
+    assertTrue(output.contains("1500.0"));
+    assertTrue(output.contains("20"));
     assertTrue(output.contains("Desc Cafe"));
   }
 

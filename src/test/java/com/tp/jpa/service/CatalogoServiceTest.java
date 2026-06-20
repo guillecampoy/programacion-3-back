@@ -388,6 +388,29 @@ class CatalogoServiceTest {
   }
 
   @Test
+  void buscarProductosActivosPorCategoriaDevuelveSoloActivosDeLaCategoria() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    Categoria bebidas = crearCategoria(1L, "Bebidas", false);
+    Categoria comidas = crearCategoria(2L, "Comidas", false);
+    Producto cafe = crearProducto(1L, "Cafe", bebidas, false);
+    Producto te = crearProducto(2L, "Te", bebidas, true);
+    Producto pan = crearProducto(3L, "Pan", comidas, false);
+    categoriaRepository.add(bebidas);
+    categoriaRepository.add(comidas);
+    productoRepository.add(cafe);
+    productoRepository.add(te);
+    productoRepository.add(pan);
+    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+
+    List<Producto> productos = service.buscarProductosActivosPorCategoria(1L);
+
+    assertEquals(1, productos.size());
+    assertEquals("Cafe", productos.get(0).getNombre());
+    assertEquals(1L, productos.get(0).getCategoria().getId());
+  }
+
+  @Test
   void reporteRechazaCategoriaInactiva() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();

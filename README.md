@@ -160,6 +160,13 @@ HU-10 queda implementada en la baja de productos:
 3. La confirmacion muestra el nombre del producto dado de baja.
 4. El producto deja de aparecer en los listados activos.
 
+HU-11 queda implementada en la consulta de productos por categoria:
+
+1. La consola lista categorias activas para seleccionar una.
+2. La consulta usa `ProductoRepository.buscarPorCategoria(Long)`.
+3. Solo devuelve productos activos de la categoria indicada.
+4. El reporte muestra ID, nombre, precio y stock.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
