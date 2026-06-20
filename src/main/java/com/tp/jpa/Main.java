@@ -159,10 +159,11 @@ public class Main {
     boolean volver = false;
     while (!volver) {
       mostrarMenuReportes();
-      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
+      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
       switch (opcion) {
         case "1" -> productosPorCategoria();
         case "2" -> pedidosPorUsuario();
+        case "3" -> pedidosPorEstado();
         case "0" -> volver = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -376,6 +377,38 @@ public class Main {
     System.out.println(
         "Pedidos activos del usuario " + usuario.getNombre() + " " + usuario.getApellido() + ":");
     imprimirPedidosReporte(pedidos);
+  }
+
+  private void pedidosPorEstado() {
+    imprimirTitulo("Pedidos por estado");
+    System.out.println("Estados disponibles:");
+    imprimirOpcion("1", Estado.PENDIENTE.name());
+    imprimirOpcion("2", Estado.CONFIRMADO.name());
+    imprimirOpcion("3", Estado.TERMINADO.name());
+    imprimirOpcion("4", Estado.CANCELADO.name());
+
+    Estado estado =
+        switch (entrada.leerOpcion(prompt("Seleccione estado"), Set.of("1", "2", "3", "4"))) {
+          case "1" -> Estado.PENDIENTE;
+          case "2" -> Estado.CONFIRMADO;
+          case "3" -> Estado.TERMINADO;
+          default -> Estado.CANCELADO;
+        };
+
+    List<Pedido> pedidos;
+    try {
+      pedidos = catalogoService.listarPedidosActivosPorEstado(estado);
+    } catch (RuntimeException exception) {
+      imprimirError(exception.getMessage());
+      return;
+    }
+    if (pedidos.isEmpty()) {
+      imprimirMensaje("No hay pedidos activos con el estado seleccionado.");
+      return;
+    }
+
+    System.out.println("Pedidos activos con estado " + estado.name() + ":");
+    imprimirPedidosPorEstadoReporte(pedidos);
   }
 
   private void modificarProducto() {
@@ -1022,6 +1055,22 @@ public class Main {
             .toList());
   }
 
+  private void imprimirPedidosPorEstadoReporte(List<Pedido> pedidos) {
+    imprimirTabla(
+        new String[] {"ID", "Fecha", "Usuario", "Total"},
+        pedidos.stream()
+            .sorted(java.util.Comparator.comparing(Pedido::getId))
+            .map(
+                pedido ->
+                    new String[] {
+                      pedido.getId().toString(),
+                      String.valueOf(pedido.getFecha()),
+                      pedido.getUsuario() == null ? "" : pedido.getUsuario().getNombre(),
+                      pedido.getTotal().toString()
+                    })
+            .toList());
+  }
+
   private void imprimirValoresActuales(String[][] filas) {
     System.out.println("Valores actuales:");
     imprimirTabla(new String[] {"Campo", "Valor"}, List.of(filas));
@@ -1077,6 +1126,7 @@ public class Main {
     System.out.println(SEPARADOR);
     imprimirOpcion("1", "Productos por categoria");
     imprimirOpcion("2", "Pedidos por usuario");
+    imprimirOpcion("3", "Pedidos por estado");
     imprimirOpcion("0", "Volver");
     System.out.println(SEPARADOR);
   }

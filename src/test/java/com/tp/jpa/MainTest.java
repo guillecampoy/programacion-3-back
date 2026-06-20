@@ -325,6 +325,15 @@ class MainTest {
           .sorted(Comparator.comparing(Pedido::getId))
           .toList();
     }
+
+    @Override
+    public List<Pedido> listarPedidosActivosPorEstado(Estado estado) {
+      return pedidos.values().stream()
+          .filter(pedido -> !Boolean.TRUE.equals(pedido.getEliminado()))
+          .filter(pedido -> Objects.equals(pedido.getEstado(), estado))
+          .sorted(Comparator.comparing(Pedido::getId))
+          .toList();
+    }
   }
 
   // ---- Helper: build a valid Categoria for testing ----
@@ -927,6 +936,47 @@ class MainTest {
 
     String output = outContent.toString();
     assertTrue(output.contains("No hay pedidos activos para el usuario seleccionado"));
+  }
+
+  @Test
+  void testPedidosPorEstado() {
+    Usuario usuario = crearUsuario(1L, "Ana", "ana@example.com", false);
+    FakeCatalogoService catalogoService = new FakeCatalogoService(List.of(usuario), List.of());
+    Pedido pedido = new Pedido();
+    pedido.setId(31L);
+    pedido.setFecha(java.time.LocalDate.of(2026, 6, 20));
+    pedido.setEstado(Estado.CONFIRMADO);
+    pedido.setFormaPago(FormaPago.TARJETA);
+    pedido.setUsuario(usuario);
+    pedido.setEliminado(false);
+    pedido.setCreatedAt(LocalDateTime.now());
+    pedido.setTotal(3456.78);
+    catalogoService.addPedido(pedido);
+
+    Scanner scanner = new Scanner("3\n3\n2\n0\n0\n");
+    Main main = new Main(scanner, catalogoService);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Pedidos por estado"));
+    assertTrue(output.contains("Pedidos activos con estado CONFIRMADO"));
+    assertTrue(output.contains("31"));
+    assertTrue(output.contains("2026-06-20"));
+    assertTrue(output.contains("Ana"));
+    assertTrue(output.contains("3456.78"));
+  }
+
+  @Test
+  void testPedidosPorEstadoSinResultados() {
+    FakeCatalogoService catalogoService =
+        new FakeCatalogoService(List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
+
+    Scanner scanner = new Scanner("3\n3\n2\n0\n0\n");
+    Main main = new Main(scanner, catalogoService);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("No hay pedidos activos con el estado seleccionado"));
   }
 
   // ===== USUARIO TESTS =====

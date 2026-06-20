@@ -199,6 +199,40 @@ class CatalogoServicePedidosTest {
   }
 
   @Test
+  void listarPedidosActivosPorEstadoDevuelveSoloActivosDelEstado() {
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+    Usuario ana = usuarioRepository.guardar(crearUsuario("ana@example.com"));
+    Usuario bruno = usuarioRepository.guardar(crearUsuario("bruno@example.com"));
+    Categoria categoria = categoriaRepository.guardar(crearCategoria("Bebidas"));
+    Producto cafe = productoRepository.guardar(crearProducto(categoria, "Cafe", 10.0, 10, true));
+
+    Pedido pendienteAna =
+        service.crearPedido(
+            ana.getId(),
+            FormaPago.EFECTIVO,
+            List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 1)));
+    Pedido confirmadoBruno =
+        service.crearPedido(
+            bruno.getId(),
+            FormaPago.TARJETA,
+            List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 1)));
+    service.cambiarEstadoPedido(confirmadoBruno.getId(), Estado.CONFIRMADO);
+    Pedido pendienteEliminado =
+        service.crearPedido(
+        ana.getId(),
+        FormaPago.TRANSFERENCIA,
+        List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 1)));
+    pedidoRepository.eliminarLogico(pendienteEliminado.getId());
+
+    List<Pedido> pedidos = service.listarPedidosActivosPorEstado(Estado.PENDIENTE);
+
+    assertEquals(1, pedidos.size());
+    assertEquals(pendienteAna.getId(), pedidos.get(0).getId());
+    assertEquals(Estado.PENDIENTE, pedidos.get(0).getEstado());
+  }
+
+  @Test
   void bajaPedidoMarcaEliminadoYConservaStockYDetalles() {
     CatalogoService service =
         new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);

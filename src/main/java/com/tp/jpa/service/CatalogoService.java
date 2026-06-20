@@ -173,6 +173,11 @@ public class CatalogoService {
     return pedidoRepository.buscarPorUsuario(usuarioId);
   }
 
+  public List<Pedido> listarPedidosActivosPorEstado(Estado estado) {
+    validarEstadoPedido(estado);
+    return pedidoRepository.buscarPorEstado(estado);
+  }
+
   public Pedido bajaPedido(Long id) {
     validarId(id, "pedido");
     Pedido pedido = obtenerPedidoActivo(id);
