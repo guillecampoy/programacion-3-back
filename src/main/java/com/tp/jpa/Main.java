@@ -10,8 +10,10 @@ import static com.tp.jpa.util.ConsolaUtils.prompt;
 
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
+import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
+import com.tp.jpa.repository.UsuarioRepository;
 import com.tp.jpa.seed.PersistenciaInicial;
 import com.tp.jpa.service.CatalogoService;
 import com.tp.jpa.util.EntradaValidada;
@@ -32,6 +34,14 @@ public class Main {
       CategoriaRepository categoriaRepository,
       ProductoRepository productoRepository) {
     this(scanner, new CatalogoService(categoriaRepository, productoRepository));
+  }
+
+  public Main(
+      Scanner scanner,
+      CategoriaRepository categoriaRepository,
+      ProductoRepository productoRepository,
+      UsuarioRepository usuarioRepository) {
+    this(scanner, new CatalogoService(categoriaRepository, productoRepository, usuarioRepository));
   }
 
   Main(Scanner scanner, CatalogoService catalogoService) {
@@ -74,12 +84,13 @@ public class Main {
     while (!salir) {
       mostrarMenuPrincipal();
       String opcion =
-          entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4"));
+          entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4", "5"));
       switch (opcion) {
         case "1" -> menuCategorias();
         case "2" -> menuProductos();
         case "3" -> menuReportes();
         case "4" -> regenerarDatos();
+        case "5" -> menuUsuarios();
         case "0" -> salir = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -122,6 +133,19 @@ public class Main {
       String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1"));
       switch (opcion) {
         case "1" -> productosPorCategoria();
+        case "0" -> volver = true;
+        default -> imprimirError("Opcion invalida.");
+      }
+    }
+  }
+
+  private void menuUsuarios() {
+    boolean volver = false;
+    while (!volver) {
+      mostrarMenuUsuarios();
+      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1"));
+      switch (opcion) {
+        case "1" -> altaUsuario();
         case "0" -> volver = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -406,6 +430,29 @@ public class Main {
     }
   }
 
+  private void altaUsuario() {
+    imprimirTitulo("Alta de usuario");
+    String nombre = entrada.leerTextoNoVacio(prompt("Nombre"));
+    String apellido = entrada.leerTextoNoVacio(prompt("Apellido"));
+    String mail = entrada.leerTextoNoVacio(prompt("Mail"));
+    String celular = entrada.leerTextoNoVacio(prompt("Celular"));
+    String contrasenia = entrada.leerTextoNoVacio(prompt("Contrasenia"));
+
+    System.out.println("Rol");
+    imprimirOpcion("1", "ADMIN");
+    imprimirOpcion("2", "USUARIO");
+    String rolTexto = entrada.leerOpcion(prompt("Seleccione rol"), Set.of("1", "2"));
+    Rol rol = "1".equals(rolTexto) ? Rol.ADMIN : Rol.USUARIO;
+
+    try {
+      var guardado =
+          catalogoService.crearUsuario(nombre, apellido, mail, celular, contrasenia, rol);
+      imprimirMensaje("Usuario creado correctamente. ID generado: " + guardado.getId());
+    } catch (RuntimeException exception) {
+      imprimirError("No se guardo el usuario: " + exception.getMessage());
+    }
+  }
+
   private void modificarCategoria() {
     imprimirTitulo("Modificar categoria");
     List<Categoria> categorias = catalogoService.listarCategoriasActivas();
@@ -578,6 +625,7 @@ public class Main {
     imprimirOpcion("2", "Productos");
     imprimirOpcion("3", "Reportes");
     imprimirOpcion("4", "Regenerar datos");
+    imprimirOpcion("5", "Usuarios");
     imprimirOpcion("0", "Salir");
     System.out.println(SEPARADOR);
   }
@@ -616,6 +664,16 @@ public class Main {
     System.out.println("Reportes");
     System.out.println(SEPARADOR);
     imprimirOpcion("1", "Productos por categoria");
+    imprimirOpcion("0", "Volver");
+    System.out.println(SEPARADOR);
+  }
+
+  private void mostrarMenuUsuarios() {
+    System.out.println();
+    System.out.println(SEPARADOR);
+    System.out.println("Usuarios");
+    System.out.println(SEPARADOR);
+    imprimirOpcion("1", "Alta de usuario");
     imprimirOpcion("0", "Volver");
     System.out.println(SEPARADOR);
   }

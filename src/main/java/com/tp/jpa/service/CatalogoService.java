@@ -2,21 +2,34 @@ package com.tp.jpa.service;
 
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
+import com.tp.jpa.model.Usuario;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
+import com.tp.jpa.repository.UsuarioRepository;
+import com.tp.jpa.model.enums.Rol;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public class CatalogoService {
   private final CategoriaRepository categoriaRepository;
   private final ProductoRepository productoRepository;
+  private final UsuarioRepository usuarioRepository;
 
   public record BajaCategoriaResultado(Categoria categoria, List<Producto> productosDadosDeBaja) {}
 
   public CatalogoService(
       CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
+    this(categoriaRepository, productoRepository, new UsuarioRepository());
+  }
+
+  public CatalogoService(
+      CategoriaRepository categoriaRepository,
+      ProductoRepository productoRepository,
+      UsuarioRepository usuarioRepository) {
     this.categoriaRepository = categoriaRepository;
     this.productoRepository = productoRepository;
+    this.usuarioRepository = usuarioRepository;
   }
 
   public List<Categoria> listarCategoriasActivas() {
@@ -33,6 +46,33 @@ public class CatalogoService {
 
   public List<Producto> listarProductosEliminados() {
     return productoRepository.listarEliminados();
+  }
+
+  public Usuario crearUsuario(
+      String nombre,
+      String apellido,
+      String mail,
+      String celular,
+      String contrasenia,
+      Rol rol) {
+    String nombreNormalizado = requerirTexto(nombre, "El nombre del usuario");
+    String apellidoNormalizado = requerirTexto(apellido, "El apellido del usuario");
+    String mailNormalizado = requerirTexto(mail, "El mail del usuario");
+    String celularNormalizado = requerirTexto(celular, "El celular del usuario");
+    String contraseniaNormalizada = requerirTexto(contrasenia, "La contrasenia del usuario");
+    validarRol(rol);
+    validarMailUnico(mailNormalizado);
+
+    Usuario usuario = new Usuario();
+    usuario.setNombre(nombreNormalizado);
+    usuario.setApellido(apellidoNormalizado);
+    usuario.setMail(mailNormalizado);
+    usuario.setCelular(celularNormalizado);
+    usuario.setContrasenia(contraseniaNormalizada);
+    usuario.setRol(rol);
+    usuario.setEliminado(false);
+    usuario.setCreatedAt(LocalDateTime.now());
+    return usuarioRepository.guardar(usuario);
   }
 
   public Categoria crearCategoria(String nombre, String descripcion) {
@@ -248,6 +288,21 @@ public class CatalogoService {
   private void validarStock(Integer stock) {
     if (stock == null || stock < 0) {
       throw new IllegalArgumentException("Error: el stock debe ser mayor o igual a 0.");
+    }
+  }
+
+  private void validarRol(Rol rol) {
+    if (rol == null) {
+      throw new IllegalArgumentException("Error: el rol del usuario es obligatorio.");
+    }
+  }
+
+  private void validarMailUnico(String mail) {
+    Optional<Usuario> usuarioExistente = usuarioRepository.buscarPorMail(mail);
+    if (usuarioExistente.isPresent()
+        && usuarioExistente.get().getMail() != null
+        && usuarioExistente.get().getMail().equalsIgnoreCase(mail)) {
+      throw new IllegalStateException("Error: ya existe un usuario activo con ese mail.");
     }
   }
 

@@ -4,10 +4,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
+import com.tp.jpa.model.Usuario;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
+import com.tp.jpa.repository.UsuarioRepository;
 import com.tp.jpa.seed.PersistenciaInicial;
 import com.tp.jpa.service.CatalogoService;
+import com.tp.jpa.model.enums.Rol;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -166,6 +169,40 @@ class MainTest {
     }
   }
 
+  static class FakeUsuarioRepository extends UsuarioRepository {
+    private final Map<Long, Usuario> store = new HashMap<>();
+    private long nextId = 1;
+    private boolean ultimoGuardadoLlegoSinId;
+    private int guardarLlamadas;
+
+    void add(Usuario usuario) {
+      store.put(usuario.getId(), usuario);
+      if (usuario.getId() >= nextId) nextId = usuario.getId() + 1;
+    }
+
+    @Override
+    public Usuario guardar(Usuario entity) {
+      guardarLlamadas++;
+      ultimoGuardadoLlegoSinId = entity.getId() == null;
+      if (entity.getId() == null) {
+        entity.setId(nextId++);
+      }
+      store.put(entity.getId(), entity);
+      return entity;
+    }
+
+    @Override
+    public Optional<Usuario> buscarPorMail(String mail) {
+      if (mail == null || mail.isBlank()) {
+        return Optional.empty();
+      }
+      return store.values().stream()
+          .filter(usuario -> !Boolean.TRUE.equals(usuario.getEliminado()))
+          .filter(usuario -> usuario.getMail() != null && usuario.getMail().equalsIgnoreCase(mail))
+          .findFirst();
+    }
+  }
+
   // ---- Helper: build a valid Categoria for testing ----
 
   private static Categoria crearCategoria(long id, String nombre) {
@@ -192,6 +229,20 @@ class MainTest {
     p.setCreatedAt(LocalDateTime.now());
     p.setCategoria(categoria);
     return p;
+  }
+
+  private static Usuario crearUsuario(long id, String nombre, String mail, boolean eliminado) {
+    Usuario usuario = new Usuario();
+    usuario.setId(id);
+    usuario.setNombre(nombre);
+    usuario.setApellido("Apellido " + nombre);
+    usuario.setMail(mail);
+    usuario.setCelular("123456");
+    usuario.setContrasenia("Clave123");
+    usuario.setRol(Rol.USUARIO);
+    usuario.setEliminado(eliminado);
+    usuario.setCreatedAt(LocalDateTime.now());
+    return usuario;
   }
 
   // ===== MAIN MENU FLOW TESTS =====
@@ -708,6 +759,57 @@ class MainTest {
     ejecutar(main);
     String output = outContent.toString();
     assertTrue(output.contains("No hay productos activos para la categoria seleccionada"));
+  }
+
+  // ===== USUARIO TESTS =====
+
+  @Test
+  void testAltaUsuario() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
+    Scanner scanner =
+        new Scanner("5\n1\nAna\nGomez\nana@example.com\n1234\nClave123\n2\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo, userRepo);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Usuario creado correctamente"));
+    assertEquals(1L, userRepo.buscarPorMail("ana@example.com").orElseThrow().getId());
+    assertFalse(userRepo.buscarPorMail("ana@example.com").orElseThrow().getEliminado());
+  }
+
+  @Test
+  void testAltaUsuarioMailDuplicado() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
+    userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
+    Scanner scanner =
+        new Scanner("5\n1\nAna2\nGomez\nana@example.com\n1234\nClave123\n1\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo, userRepo);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("No se guardo el usuario"));
+    assertTrue(output.contains("ya existe un usuario activo con ese mail"));
+    assertEquals(0, userRepo.guardarLlamadas);
+  }
+
+  @Test
+  void testAltaUsuarioRolValidoLuegoGuarda() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
+    Scanner scanner =
+        new Scanner("5\n1\nBruno\nPerez\nbruno@example.com\n9999\nClave123\n3\n1\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo, userRepo);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Opcion invalida"));
+    assertTrue(output.contains("Usuario creado correctamente"));
+    assertEquals(Rol.ADMIN, userRepo.buscarPorMail("bruno@example.com").orElseThrow().getRol());
   }
 
   // ===== ENTIDADES TEST =====

@@ -16,6 +16,7 @@ Lo que hoy expone la aplicacion desde consola es:
 6. Baja logica y restauracion de productos.
 7. Reporte de productos activos por categoria.
 8. Regeneracion de la base local con semilla inicial.
+9. Alta de usuarios.
 
 El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, aunque esas entidades no forman parte del menu operativo actual.
 
@@ -167,17 +168,25 @@ HU-11 queda implementada en la consulta de productos por categoria:
 3. Solo devuelve productos activos de la categoria indicada.
 4. El reporte muestra ID, nombre, precio y stock.
 
+HU-12 queda implementada en el alta de usuarios:
+
+1. La consola usa la opcion de usuarios del menu principal.
+2. El alta solicita nombre, apellido, mail, celular, contrasenia y rol.
+3. El mail activo duplicado no se persiste.
+4. El usuario se guarda con `eliminado = false` y se muestra el ID generado.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
 
 1. Crear y modificar categorias.
 2. Crear y modificar productos.
-3. Ejecutar bajas logicas.
-4. Restaurar registros eliminados.
-5. Validar ids, textos, precio y stock.
-6. Resolver el impacto de eliminar una categoria sobre sus productos activos.
-7. Buscar productos activos por categoria.
+3. Crear usuarios.
+4. Ejecutar bajas logicas.
+5. Restaurar registros eliminados.
+6. Validar ids, textos, precio, stock, rol y mail unico.
+7. Resolver el impacto de eliminar una categoria sobre sus productos activos.
+8. Buscar productos activos por categoria.
 
 La consola delega en esta capa para evitar mezclar input de usuario con reglas de negocio.
 
@@ -191,6 +200,7 @@ Sistema JPA - Categorias y Productos
 2. Productos
 3. Reportes
 4. Regenerar datos
+5. Usuarios
 0. Salir
 ```
 
@@ -220,6 +230,13 @@ Submenu de reportes:
 
 ```text
 1. Productos por categoria
+0. Volver
+```
+
+Submenu de usuarios:
+
+```text
+1. Alta de usuario
 0. Volver
 ```
 

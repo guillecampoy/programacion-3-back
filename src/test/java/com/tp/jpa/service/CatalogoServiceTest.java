@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
+import com.tp.jpa.model.Usuario;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
+import com.tp.jpa.repository.UsuarioRepository;
+import com.tp.jpa.model.enums.Rol;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +22,7 @@ class CatalogoServiceTest {
   void crearCategoriaDelegaIdALRepositorio() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     CatalogoService service =
-        new CatalogoService(categoriaRepository, new FakeProductoRepository());
+        new CatalogoService(categoriaRepository, new FakeProductoRepository(), new FakeUsuarioRepository());
 
     Categoria categoria = service.crearCategoria("Bebidas", "Bebidas varias");
 
@@ -33,9 +36,11 @@ class CatalogoServiceTest {
   void crearProductoValidaCategoriaActivaYDelegaIdAlRepositorio() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(7L, "Bebidas", false);
     categoriaRepository.add(categoria);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     Producto producto =
         service.crearProducto(7L, "Cafe", "Cafe molido", 1500.0, 10, "cafe.png", false);
@@ -52,7 +57,8 @@ class CatalogoServiceTest {
   void crearCategoriaRechazaEntradaInvalidaAntesDeGuardar() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     CatalogoService service =
-        new CatalogoService(categoriaRepository, new FakeProductoRepository());
+        new CatalogoService(
+            categoriaRepository, new FakeProductoRepository(), new FakeUsuarioRepository());
 
     IllegalArgumentException exception =
         assertThrows(
@@ -66,7 +72,8 @@ class CatalogoServiceTest {
   void crearCategoriaPermiteDescripcionVacia() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     CatalogoService service =
-        new CatalogoService(categoriaRepository, new FakeProductoRepository());
+        new CatalogoService(
+            categoriaRepository, new FakeProductoRepository(), new FakeUsuarioRepository());
 
     Categoria categoria = service.crearCategoria("Bebidas", "   ");
 
@@ -80,7 +87,8 @@ class CatalogoServiceTest {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     categoriaRepository.add(crearCategoria(1L, "Bebidas", false));
     CatalogoService service =
-        new CatalogoService(categoriaRepository, new FakeProductoRepository());
+        new CatalogoService(
+            categoriaRepository, new FakeProductoRepository(), new FakeUsuarioRepository());
 
     Categoria modificada = service.modificarCategoria(1L, "  Bebidas frias  ", "   ");
 
@@ -94,7 +102,8 @@ class CatalogoServiceTest {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     categoriaRepository.add(crearCategoria(1L, "Bebidas", true));
     CatalogoService service =
-        new CatalogoService(categoriaRepository, new FakeProductoRepository());
+        new CatalogoService(
+            categoriaRepository, new FakeProductoRepository(), new FakeUsuarioRepository());
 
     IllegalArgumentException exception =
         assertThrows(IllegalArgumentException.class, () -> service.modificarCategoria(1L, "A", ""));
@@ -107,8 +116,10 @@ class CatalogoServiceTest {
   void crearProductoRechazaPrecioYStockInvalidosAntesDeGuardar() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     categoriaRepository.add(crearCategoria(1L, "Bebidas", false));
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     IllegalArgumentException precioException =
         assertThrows(
@@ -128,8 +139,10 @@ class CatalogoServiceTest {
   void crearProductoRechazaImagenVaciaAntesDeGuardar() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     categoriaRepository.add(crearCategoria(1L, "Bebidas", false));
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     IllegalArgumentException exception =
         assertThrows(
@@ -144,10 +157,12 @@ class CatalogoServiceTest {
   void modificarProductoRechazaEntradaInvalidaSinMutarEntidad() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", false);
     Producto producto = crearProducto(1L, "Cafe", categoria, false);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     IllegalArgumentException exception =
         assertThrows(
@@ -165,10 +180,12 @@ class CatalogoServiceTest {
   void modificarProductoConCamposVaciosConservaLosValoresPrevios() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", false);
     Producto producto = crearProducto(1L, "Cafe", categoria, false);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     Producto modificado = service.modificarProducto(1L, "  ", null, null, null);
 
@@ -183,13 +200,15 @@ class CatalogoServiceTest {
   void modificarProductoPermiteReasignarCategoriaActiva() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoriaOrigen = crearCategoria(1L, "Bebidas", false);
     Categoria categoriaDestino = crearCategoria(2L, "Snacks", false);
     Producto producto = crearProducto(1L, "Cafe", categoriaOrigen, false);
     categoriaRepository.add(categoriaOrigen);
     categoriaRepository.add(categoriaDestino);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     Producto modificado = service.modificarProducto(1L, "Cafe premium", null, null, 2L);
 
@@ -202,13 +221,15 @@ class CatalogoServiceTest {
   void modificarProductoRechazaCategoriaInactiva() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoriaOrigen = crearCategoria(1L, "Bebidas", false);
     Categoria categoriaDestino = crearCategoria(2L, "Snacks", true);
     Producto producto = crearProducto(1L, "Cafe", categoriaOrigen, false);
     categoriaRepository.add(categoriaOrigen);
     categoriaRepository.add(categoriaDestino);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     IllegalArgumentException exception =
         assertThrows(
@@ -225,10 +246,12 @@ class CatalogoServiceTest {
   void modificarProductoRechazaProductoDadoDeBaja() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", false);
     Producto producto = crearProducto(1L, "Cafe", categoria, true);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     IllegalArgumentException exception =
         assertThrows(
@@ -244,7 +267,9 @@ class CatalogoServiceTest {
   void operacionesRechazanIdsInvalidosAntesDeConsultarRepositorio() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(
+            categoriaRepository, productoRepository, new FakeUsuarioRepository());
 
     IllegalArgumentException exception =
         assertThrows(IllegalArgumentException.class, () -> service.obtenerCategoriaActiva(0L));
@@ -257,10 +282,12 @@ class CatalogoServiceTest {
   void bajaProductoInactivoInformaEstadoCorrecto() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", false);
     Producto producto = crearProducto(1L, "Cafe", categoria, true);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     IllegalStateException exception =
         assertThrows(IllegalStateException.class, () -> service.bajaProducto(1L));
@@ -272,11 +299,13 @@ class CatalogoServiceTest {
   void bajaProductoMarcaEliminadoYNoApareceEnActivos() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", false);
     Producto producto = crearProducto(1L, "Cafe", categoria, false);
     categoriaRepository.add(categoria);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     Producto dadoDeBaja = service.bajaProducto(1L);
 
@@ -289,11 +318,13 @@ class CatalogoServiceTest {
   void bajaProductoRechazaSegundoIntento() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", false);
     Producto producto = crearProducto(1L, "Cafe", categoria, true);
     categoriaRepository.add(categoria);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     IllegalStateException exception =
         assertThrows(IllegalStateException.class, () -> service.bajaProducto(1L));
@@ -305,13 +336,15 @@ class CatalogoServiceTest {
   void bajaCategoriaSoloDesactivaLaCategoriaYConservaLosProductos() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", false);
     Producto activo = crearProducto(1L, "Cafe", categoria, false);
     Producto yaEliminado = crearProducto(2L, "Te", categoria, true);
     categoriaRepository.add(categoria);
     productoRepository.add(activo);
     productoRepository.add(yaEliminado);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     CatalogoService.BajaCategoriaResultado resultado = service.bajaCategoria(1L);
 
@@ -325,8 +358,10 @@ class CatalogoServiceTest {
   void bajaCategoriaRechazaUnaCategoriaYaDadaDeBaja() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     categoriaRepository.add(crearCategoria(1L, "Bebidas", true));
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     IllegalStateException exception =
         assertThrows(IllegalStateException.class, () -> service.bajaCategoria(1L));
@@ -338,11 +373,13 @@ class CatalogoServiceTest {
   void restaurarCategoriaYProductoValidanEstadoYReactivanEntidad() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", true);
     Producto producto = crearProducto(1L, "Cafe", categoria, true);
     categoriaRepository.add(categoria);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     Categoria categoriaRestaurada = service.restaurarCategoria(1L);
     Producto productoRestaurado = service.restaurarProducto(1L);
@@ -357,11 +394,13 @@ class CatalogoServiceTest {
   void restaurarProductoRechazaSiCategoriaEstaEliminada() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", true);
     Producto producto = crearProducto(1L, "Cafe", categoria, true);
     categoriaRepository.add(categoria);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     IllegalStateException exception =
         assertThrows(IllegalStateException.class, () -> service.restaurarProducto(1L));
@@ -376,11 +415,13 @@ class CatalogoServiceTest {
   void restaurarProductoPermiteSiCategoriaEstaActiva() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria categoria = crearCategoria(1L, "Bebidas", false);
     Producto producto = crearProducto(1L, "Cafe", categoria, true);
     categoriaRepository.add(categoria);
     productoRepository.add(producto);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     Producto productoRestaurado = service.restaurarProducto(1L);
 
@@ -391,6 +432,7 @@ class CatalogoServiceTest {
   void buscarProductosActivosPorCategoriaDevuelveSoloActivosDeLaCategoria() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     Categoria bebidas = crearCategoria(1L, "Bebidas", false);
     Categoria comidas = crearCategoria(2L, "Comidas", false);
     Producto cafe = crearProducto(1L, "Cafe", bebidas, false);
@@ -401,7 +443,8 @@ class CatalogoServiceTest {
     productoRepository.add(cafe);
     productoRepository.add(te);
     productoRepository.add(pan);
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     List<Producto> productos = service.buscarProductosActivosPorCategoria(1L);
 
@@ -414,8 +457,10 @@ class CatalogoServiceTest {
   void reporteRechazaCategoriaInactiva() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
     categoriaRepository.add(crearCategoria(3L, "Archivada", true));
-    CatalogoService service = new CatalogoService(categoriaRepository, productoRepository);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     IllegalArgumentException exception =
         assertThrows(
@@ -423,6 +468,74 @@ class CatalogoServiceTest {
 
     assertEquals(
         "Error: no existe una categoria activa con el ID indicado.", exception.getMessage());
+  }
+
+  @Test
+  void crearUsuarioDelegaIdYLimpiaBanderas() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    Usuario usuario =
+        service.crearUsuario(
+            "Ana",
+            "Gomez",
+            "ana@example.com",
+            "1234",
+            "Clave123",
+            Rol.ADMIN);
+
+    assertTrue(usuarioRepository.ultimoGuardadoLlegoSinId);
+    assertEquals(1L, usuario.getId());
+    assertEquals("Ana", usuario.getNombre());
+    assertEquals(Rol.ADMIN, usuario.getRol());
+    assertFalse(usuario.getEliminado());
+  }
+
+  @Test
+  void crearUsuarioRechazaMailActivoDuplicado() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    usuarioRepository.add(crearUsuario(1L, "Ana", "ana@example.com", false));
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    IllegalStateException exception =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                service.crearUsuario(
+                    "Ana 2",
+                    "Gomez",
+                    "ana@example.com",
+                    "1234",
+                    "Clave123",
+                    Rol.USUARIO));
+
+    assertEquals("Error: ya existe un usuario activo con ese mail.", exception.getMessage());
+    assertEquals(0, usuarioRepository.guardarLlamadas);
+  }
+
+  @Test
+  void crearUsuarioRechazaRolNuloAntesDeGuardar() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                service.crearUsuario(
+                    "Ana", "Gomez", "ana2@example.com", "1234", "Clave123", null));
+
+    assertEquals("Error: el rol del usuario es obligatorio.", exception.getMessage());
+    assertEquals(0, usuarioRepository.guardarLlamadas);
   }
 
   private static Categoria crearCategoria(Long id, String nombre, boolean eliminado) {
@@ -449,6 +562,20 @@ class CatalogoServiceTest {
     producto.setCreatedAt(LocalDateTime.now());
     producto.setCategoria(categoria);
     return producto;
+  }
+
+  private static Usuario crearUsuario(Long id, String nombre, String mail, boolean eliminado) {
+    Usuario usuario = new Usuario();
+    usuario.setId(id);
+    usuario.setNombre(nombre);
+    usuario.setApellido("Apellido " + nombre);
+    usuario.setMail(mail);
+    usuario.setCelular("1234");
+    usuario.setContrasenia("Clave123");
+    usuario.setRol(Rol.USUARIO);
+    usuario.setEliminado(eliminado);
+    usuario.setCreatedAt(LocalDateTime.now());
+    return usuario;
   }
 
   private static class FakeCategoriaRepository extends CategoriaRepository {
@@ -549,6 +676,40 @@ class CatalogoServiceTest {
           .filter(producto -> producto.getCategoria() != null)
           .filter(producto -> Objects.equals(producto.getCategoria().getId(), categoriaId))
           .toList();
+    }
+  }
+
+  private static class FakeUsuarioRepository extends UsuarioRepository {
+    private final Map<Long, Usuario> store = new HashMap<>();
+    private long nextId = 1L;
+    private boolean ultimoGuardadoLlegoSinId;
+    private int guardarLlamadas;
+
+    void add(Usuario usuario) {
+      store.put(usuario.getId(), usuario);
+      nextId = Math.max(nextId, usuario.getId() + 1);
+    }
+
+    @Override
+    public Usuario guardar(Usuario entity) {
+      guardarLlamadas++;
+      ultimoGuardadoLlegoSinId = entity.getId() == null;
+      if (entity.getId() == null) {
+        entity.setId(nextId++);
+      }
+      store.put(entity.getId(), entity);
+      return entity;
+    }
+
+    @Override
+    public Optional<Usuario> buscarPorMail(String mail) {
+      if (mail == null || mail.isBlank()) {
+        return Optional.empty();
+      }
+      return store.values().stream()
+          .filter(usuario -> !Boolean.TRUE.equals(usuario.getEliminado()))
+          .filter(usuario -> usuario.getMail() != null && usuario.getMail().equalsIgnoreCase(mail))
+          .findFirst();
     }
   }
 }
