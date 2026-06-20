@@ -91,10 +91,10 @@ public class CatalogoService {
     try {
       entityManager.getTransaction().begin();
 
-      Usuario usuario =
-          entityManager.find(Usuario.class, usuarioId);
+      Usuario usuario = entityManager.find(Usuario.class, usuarioId);
       if (usuario == null || Boolean.TRUE.equals(usuario.getEliminado())) {
-        throw new IllegalArgumentException("Error: no existe un usuario activo con el ID indicado.");
+        throw new IllegalArgumentException(
+            "Error: no existe un usuario activo con el ID indicado.");
       }
 
       Pedido pedido = new Pedido();
@@ -117,7 +117,8 @@ public class CatalogoService {
 
         Producto producto = entityManager.find(Producto.class, lineaPedido.productoId());
         if (producto == null || Boolean.TRUE.equals(producto.getEliminado())) {
-          throw new IllegalArgumentException("Error: no existe un producto activo con el ID indicado.");
+          throw new IllegalArgumentException(
+              "Error: no existe un producto activo con el ID indicado.");
         }
         if (!Boolean.TRUE.equals(producto.getDisponible())) {
           throw new IllegalStateException(
@@ -152,7 +153,9 @@ public class CatalogoService {
         pedidoRepository
             .buscarPorId(id)
             .orElseThrow(
-                () -> new IllegalArgumentException("Error: no existe un pedido activo con el ID indicado."));
+                () ->
+                    new IllegalArgumentException(
+                        "Error: no existe un pedido activo con el ID indicado."));
     if (Boolean.TRUE.equals(pedido.getEliminado())) {
       throw new IllegalArgumentException("Error: no existe un pedido activo con el ID indicado.");
     }

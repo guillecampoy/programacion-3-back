@@ -235,7 +235,8 @@ class MainTest {
     private Pedido ultimoPedido;
 
     FakeCatalogoService(List<Usuario> usuariosActivos, List<Producto> productosDisponibles) {
-      super(new FakeCategoriaRepository(), new FakeProductoRepository(), new FakeUsuarioRepository());
+      super(
+          new FakeCategoriaRepository(), new FakeProductoRepository(), new FakeUsuarioRepository());
       this.usuariosActivos = usuariosActivos;
       this.productosDisponibles = productosDisponibles;
     }
@@ -321,7 +322,10 @@ class MainTest {
     public List<Pedido> listarPedidosActivosPorUsuario(Long usuarioId) {
       return pedidos.values().stream()
           .filter(pedido -> !Boolean.TRUE.equals(pedido.getEliminado()))
-          .filter(pedido -> pedido.getUsuario() != null && Objects.equals(pedido.getUsuario().getId(), usuarioId))
+          .filter(
+              pedido ->
+                  pedido.getUsuario() != null
+                      && Objects.equals(pedido.getUsuario().getId(), usuarioId))
           .sorted(Comparator.comparing(Pedido::getId))
           .toList();
     }
@@ -906,7 +910,8 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
     FakeCatalogoService catalogoService =
-        new FakeCatalogoService(List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
+        new FakeCatalogoService(
+            List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
 
     Usuario usuario = crearUsuario(1L, "Ana", "ana@example.com", false);
     Pedido pedido = new Pedido();
@@ -937,7 +942,8 @@ class MainTest {
   @Test
   void testPedidosPorUsuarioSinPedidos() {
     FakeCatalogoService catalogoService =
-        new FakeCatalogoService(List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
+        new FakeCatalogoService(
+            List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
 
     Scanner scanner = new Scanner("3\n2\n1\n0\n0\n");
     Main main = new Main(scanner, catalogoService);
@@ -978,7 +984,8 @@ class MainTest {
   @Test
   void testPedidosPorEstadoSinResultados() {
     FakeCatalogoService catalogoService =
-        new FakeCatalogoService(List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
+        new FakeCatalogoService(
+            List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
 
     Scanner scanner = new Scanner("3\n3\n2\n0\n0\n");
     Main main = new Main(scanner, catalogoService);

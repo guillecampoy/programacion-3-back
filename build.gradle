@@ -62,9 +62,16 @@ test {
 }
 
 check.dependsOn tasks.named('spotlessCheck')
+build.dependsOn tasks.named('spotlessApply')
 
 tasks.register('format') {
     group = 'formatting'
     description = 'Formats source files using Spotless.'
+    dependsOn tasks.named('spotlessApply')
+}
+
+tasks.register('autofix') {
+    group = 'formatting'
+    description = 'Runs Spotless autofix without invoking the full build.'
     dependsOn tasks.named('spotlessApply')
 }

@@ -22,8 +22,8 @@ import com.tp.jpa.seed.PersistenciaInicial;
 import com.tp.jpa.service.CatalogoService;
 import com.tp.jpa.util.EntradaValidada;
 import com.tp.jpa.util.JPAUtil;
-import java.util.Locale;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -58,7 +58,8 @@ public class Main {
   }
 
   Main(Scanner scanner, CatalogoService catalogoService) {
-    this(scanner, catalogoService, new UsuarioRepository(), PersistenciaInicial::regenerarBaseLocal);
+    this(
+        scanner, catalogoService, new UsuarioRepository(), PersistenciaInicial::regenerarBaseLocal);
   }
 
   Main(
@@ -100,7 +101,8 @@ public class Main {
       // La inicializacion crea la base local y aplica datos semilla solo cuando corresponde.
     }
     try (Scanner scanner = new Scanner(System.in)) {
-      new Main(scanner, new CategoriaRepository(), new ProductoRepository(), new UsuarioRepository())
+      new Main(
+              scanner, new CategoriaRepository(), new ProductoRepository(), new UsuarioRepository())
           .ejecutar();
     } finally {
       JPAUtil.close();
@@ -194,7 +196,8 @@ public class Main {
     boolean volver = false;
     while (!volver) {
       mostrarMenuPedidos();
-      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
+      String opcion =
+          entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
       switch (opcion) {
         case "1" -> altaPedido();
         case "2" -> cambiarEstadoPedido();
@@ -1018,9 +1021,7 @@ public class Main {
     imprimirTabla(
         new String[] {"Producto", "Cantidad", "Subtotal"},
         pedido.getDetallePedidos().stream()
-            .sorted(
-                java.util.Comparator.comparing(
-                    detalle -> detalle.getProducto().getId()))
+            .sorted(java.util.Comparator.comparing(detalle -> detalle.getProducto().getId()))
             .map(
                 detalle ->
                     new String[] {

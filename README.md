@@ -374,6 +374,13 @@ La base del proyecto ya pasa la suite de tests:
 ./gradlew test
 ```
 
+La tarea `build` ejecuta `spotlessApply` automaticamente para dejar un autofix de formato antes del empaquetado.
+
+```bash
+./gradlew build
+./gradlew autofix
+```
+
 La validacion cubre el contrato de HU-01 y el alta de pedidos con pruebas sobre guardado nuevo, guardado con id existente, busqueda, listado activo, borrado logico, transaccion atómica, descuento de stock y rollback.
 
 Tambien cubre HU-17, HU-18, HU-19, HU-20 y HU-21 con pruebas de cambio de estado, baja logica, reportes por usuario, por estado y total facturado, y rechazo de pedidos eliminados.

@@ -220,9 +220,9 @@ class CatalogoServicePedidosTest {
     service.cambiarEstadoPedido(confirmadoBruno.getId(), Estado.CONFIRMADO);
     Pedido pendienteEliminado =
         service.crearPedido(
-        ana.getId(),
-        FormaPago.TRANSFERENCIA,
-        List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 1)));
+            ana.getId(),
+            FormaPago.TRANSFERENCIA,
+            List.of(new CatalogoService.LineaPedidoSolicitud(cafe.getId(), 1)));
     pedidoRepository.eliminarLogico(pendienteEliminado.getId());
 
     List<Pedido> pedidos = service.listarPedidosActivosPorEstado(Estado.PENDIENTE);
@@ -306,7 +306,9 @@ class CatalogoServicePedidosTest {
 
     service.bajaPedido(pedido.getId());
 
-    assertTrue(Boolean.TRUE.equals(pedidoRepository.buscarPorId(pedido.getId()).orElseThrow().getEliminado()));
+    assertTrue(
+        Boolean.TRUE.equals(
+            pedidoRepository.buscarPorId(pedido.getId()).orElseThrow().getEliminado()));
     assertEquals(8, productoRepository.buscarPorId(cafe.getId()).orElseThrow().getStock());
     assertTrue(pedidoRepository.buscarPorUsuario(usuario.getId()).isEmpty());
     try (EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager()) {
