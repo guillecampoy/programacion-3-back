@@ -885,6 +885,36 @@ class MainTest {
     assertTrue(userRepo.buscarPorMail("ana@example.com").isEmpty());
   }
 
+  @Test
+  void testBuscarUsuarioPorMailMuestraDatosSinContrasenia() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
+    userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
+    Scanner scanner = new Scanner("5\n4\n  ANA@EXAMPLE.COM  \n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo, userRepo);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Buscar usuario por mail"));
+    assertTrue(output.contains("ana@example.com"));
+    assertTrue(output.contains("Ana"));
+    assertFalse(output.contains("Clave123"));
+  }
+
+  @Test
+  void testBuscarUsuarioPorMailNoExistente() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
+    Scanner scanner = new Scanner("5\n4\nnoexiste@example.com\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo, userRepo);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("No existe usuario activo con ese mail."));
+  }
+
   // ===== ENTIDADES TEST =====
 
   @Test

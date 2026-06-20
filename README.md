@@ -2,7 +2,7 @@
 
 Backend de consola para el TPI de Programacion III con Java, Gradle, JPA/Hibernate y H2 en archivo.
 
-Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y deja preparada la base para las historias siguientes sin implementar nuevas historias de usuario en este paso.
+Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y suma la busqueda de usuarios por mail desde la consola.
 
 ## Estado actual
 
@@ -19,6 +19,7 @@ Lo que hoy expone la aplicacion desde consola es:
 9. Alta de usuarios.
 10. Modificacion de usuarios.
 11. Baja de usuarios.
+12. Busqueda de usuarios por mail.
 
 El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, aunque esas entidades no forman parte del menu operativo actual.
 
@@ -191,6 +192,14 @@ HU-14 queda implementada en la baja de usuarios:
 3. Se confirma mostrando nombre y apellido del usuario dado de baja.
 4. El usuario deja de aparecer en los listados activos y en la busqueda por mail.
 
+HU-15 queda implementada en la busqueda de usuarios por mail:
+
+1. La consola usa la opcion de usuarios del menu principal.
+2. La busqueda solicita el mail por consola y normaliza espacios con `trim()`.
+3. La consulta delega en `UsuarioRepository.buscarPorMail(String)`.
+4. Si el usuario existe, se muestran sus datos sin exponer la contrasenia.
+5. Si no existe, se informa que no hay un usuario activo con ese mail.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
@@ -255,6 +264,7 @@ Submenu de usuarios:
 1. Alta de usuario
 2. Modificar usuario
 3. Baja logica de usuario
+4. Buscar usuario por mail
 0. Volver
 ```
 

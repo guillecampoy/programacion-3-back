@@ -28,13 +28,18 @@ public class Main {
   private final Scanner scanner;
   private final EntradaValidada entrada;
   private final CatalogoService catalogoService;
+  private final UsuarioRepository usuarioRepository;
   private final Supplier<PersistenciaInicial.ResumenPersistencia> regeneradorDatos;
 
   public Main(
       Scanner scanner,
       CategoriaRepository categoriaRepository,
       ProductoRepository productoRepository) {
-    this(scanner, new CatalogoService(categoriaRepository, productoRepository));
+    this(
+        scanner,
+        new CatalogoService(categoriaRepository, productoRepository),
+        new UsuarioRepository(),
+        PersistenciaInicial::regenerarBaseLocal);
   }
 
   public Main(
@@ -42,20 +47,36 @@ public class Main {
       CategoriaRepository categoriaRepository,
       ProductoRepository productoRepository,
       UsuarioRepository usuarioRepository) {
-    this(scanner, new CatalogoService(categoriaRepository, productoRepository, usuarioRepository));
+    this(
+        scanner,
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository),
+        usuarioRepository);
   }
 
   Main(Scanner scanner, CatalogoService catalogoService) {
-    this(scanner, catalogoService, PersistenciaInicial::regenerarBaseLocal);
+    this(scanner, catalogoService, new UsuarioRepository(), PersistenciaInicial::regenerarBaseLocal);
   }
 
   Main(
       Scanner scanner,
       CatalogoService catalogoService,
       Supplier<PersistenciaInicial.ResumenPersistencia> regeneradorDatos) {
+    this(scanner, catalogoService, new UsuarioRepository(), regeneradorDatos);
+  }
+
+  Main(Scanner scanner, CatalogoService catalogoService, UsuarioRepository usuarioRepository) {
+    this(scanner, catalogoService, usuarioRepository, PersistenciaInicial::regenerarBaseLocal);
+  }
+
+  Main(
+      Scanner scanner,
+      CatalogoService catalogoService,
+      UsuarioRepository usuarioRepository,
+      Supplier<PersistenciaInicial.ResumenPersistencia> regeneradorDatos) {
     this.scanner = scanner;
     this.entrada = new EntradaValidada(scanner);
     this.catalogoService = catalogoService;
+    this.usuarioRepository = usuarioRepository;
     this.regeneradorDatos = regeneradorDatos;
   }
 
@@ -66,6 +87,7 @@ public class Main {
     this.scanner = null;
     this.entrada = entrada;
     this.catalogoService = new CatalogoService(categoriaRepository, productoRepository);
+    this.usuarioRepository = new UsuarioRepository();
     this.regeneradorDatos = PersistenciaInicial::regenerarBaseLocal;
   }
 
@@ -74,7 +96,8 @@ public class Main {
       // La inicializacion crea la base local y aplica datos semilla solo cuando corresponde.
     }
     try (Scanner scanner = new Scanner(System.in)) {
-      new Main(scanner, new CategoriaRepository(), new ProductoRepository()).ejecutar();
+      new Main(scanner, new CategoriaRepository(), new ProductoRepository(), new UsuarioRepository())
+          .ejecutar();
     } finally {
       JPAUtil.close();
     }
@@ -145,11 +168,12 @@ public class Main {
     while (!volver) {
       mostrarMenuUsuarios();
       String opcion =
-          entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3"));
+          entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4"));
       switch (opcion) {
         case "1" -> altaUsuario();
         case "2" -> modificarUsuario();
         case "3" -> bajaUsuario();
+        case "4" -> buscarUsuarioPorMail();
         case "0" -> volver = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -551,6 +575,19 @@ public class Main {
     }
   }
 
+  private void buscarUsuarioPorMail() {
+    imprimirTitulo("Buscar usuario por mail");
+    String mail = entrada.leerTextoNoVacio(prompt("Mail"));
+
+    var usuario = usuarioRepository.buscarPorMail(mail);
+    if (usuario.isEmpty()) {
+      imprimirMensaje("No existe usuario activo con ese mail.");
+      return;
+    }
+
+    imprimirUsuarios(List.of(usuario.orElseThrow()));
+  }
+
   private void modificarCategoria() {
     imprimirTitulo("Modificar categoria");
     List<Categoria> categorias = catalogoService.listarCategoriasActivas();
@@ -791,6 +828,7 @@ public class Main {
     imprimirOpcion("1", "Alta de usuario");
     imprimirOpcion("2", "Modificar usuario");
     imprimirOpcion("3", "Baja logica de usuario");
+    imprimirOpcion("4", "Buscar usuario por mail");
     imprimirOpcion("0", "Volver");
     System.out.println(SEPARADOR);
   }
