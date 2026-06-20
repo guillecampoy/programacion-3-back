@@ -17,6 +17,7 @@ Lo que hoy expone la aplicacion desde consola es:
 7. Reporte de productos activos por categoria.
 8. Regeneracion de la base local con semilla inicial.
 9. Alta de usuarios.
+10. Modificacion de usuarios.
 
 El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, aunque esas entidades no forman parte del menu operativo actual.
 
@@ -175,13 +176,20 @@ HU-12 queda implementada en el alta de usuarios:
 3. El mail activo duplicado no se persiste.
 4. El usuario se guarda con `eliminado = false` y se muestra el ID generado.
 
+HU-13 queda implementada en la modificacion de usuarios:
+
+1. La consola lista usuarios activos antes de pedir el ID.
+2. Los valores actuales se muestran antes de editar.
+3. Los campos en blanco conservan el valor previo.
+4. El mail nuevo se valida contra otros usuarios activos antes de persistir.
+
 ## Capa de servicio
 
 `CatalogoService` concentra la logica de negocio que usa la consola:
 
 1. Crear y modificar categorias.
 2. Crear y modificar productos.
-3. Crear usuarios.
+3. Crear y modificar usuarios.
 4. Ejecutar bajas logicas.
 5. Restaurar registros eliminados.
 6. Validar ids, textos, precio, stock, rol y mail unico.
@@ -237,6 +245,7 @@ Submenu de usuarios:
 
 ```text
 1. Alta de usuario
+2. Modificar usuario
 0. Volver
 ```
 

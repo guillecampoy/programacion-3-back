@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
 import com.tp.jpa.model.Usuario;
+import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
 import com.tp.jpa.repository.UsuarioRepository;
-import com.tp.jpa.model.enums.Rol;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +22,8 @@ class CatalogoServiceTest {
   void crearCategoriaDelegaIdALRepositorio() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     CatalogoService service =
-        new CatalogoService(categoriaRepository, new FakeProductoRepository(), new FakeUsuarioRepository());
+        new CatalogoService(
+            categoriaRepository, new FakeProductoRepository(), new FakeUsuarioRepository());
 
     Categoria categoria = service.crearCategoria("Bebidas", "Bebidas varias");
 
@@ -108,7 +109,8 @@ class CatalogoServiceTest {
     IllegalArgumentException exception =
         assertThrows(IllegalArgumentException.class, () -> service.modificarCategoria(1L, "A", ""));
 
-    assertEquals("Error: no existe una categoria activa con el ID indicado.", exception.getMessage());
+    assertEquals(
+        "Error: no existe una categoria activa con el ID indicado.", exception.getMessage());
     assertEquals(0, categoriaRepository.guardarLlamadas);
   }
 
@@ -268,8 +270,7 @@ class CatalogoServiceTest {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
     CatalogoService service =
-        new CatalogoService(
-            categoriaRepository, productoRepository, new FakeUsuarioRepository());
+        new CatalogoService(categoriaRepository, productoRepository, new FakeUsuarioRepository());
 
     IllegalArgumentException exception =
         assertThrows(IllegalArgumentException.class, () -> service.obtenerCategoriaActiva(0L));
@@ -479,13 +480,7 @@ class CatalogoServiceTest {
         new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
 
     Usuario usuario =
-        service.crearUsuario(
-            "Ana",
-            "Gomez",
-            "ana@example.com",
-            "1234",
-            "Clave123",
-            Rol.ADMIN);
+        service.crearUsuario("Ana", "Gomez", "ana@example.com", "1234", "Clave123", Rol.ADMIN);
 
     assertTrue(usuarioRepository.ultimoGuardadoLlegoSinId);
     assertEquals(1L, usuario.getId());
@@ -508,12 +503,7 @@ class CatalogoServiceTest {
             IllegalStateException.class,
             () ->
                 service.crearUsuario(
-                    "Ana 2",
-                    "Gomez",
-                    "ana@example.com",
-                    "1234",
-                    "Clave123",
-                    Rol.USUARIO));
+                    "Ana 2", "Gomez", "ana@example.com", "1234", "Clave123", Rol.USUARIO));
 
     assertEquals("Error: ya existe un usuario activo con ese mail.", exception.getMessage());
     assertEquals(0, usuarioRepository.guardarLlamadas);
@@ -531,10 +521,69 @@ class CatalogoServiceTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                service.crearUsuario(
-                    "Ana", "Gomez", "ana2@example.com", "1234", "Clave123", null));
+                service.crearUsuario("Ana", "Gomez", "ana2@example.com", "1234", "Clave123", null));
 
     assertEquals("Error: el rol del usuario es obligatorio.", exception.getMessage());
+    assertEquals(0, usuarioRepository.guardarLlamadas);
+  }
+
+  @Test
+  void modificarUsuarioPermiteActualizarCamposYConservarBlancos() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    usuarioRepository.add(crearUsuario(1L, "Ana", "ana@example.com", false));
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    Usuario usuario =
+        service.modificarUsuario(
+            1L, "Ana Maria", "", "ana.nueva@example.com", "", "NuevaClave", Rol.ADMIN);
+
+    assertEquals("Ana Maria", usuario.getNombre());
+    assertEquals("Apellido Ana", usuario.getApellido());
+    assertEquals("ana.nueva@example.com", usuario.getMail());
+    assertEquals("1234", usuario.getCelular());
+    assertEquals("NuevaClave", usuario.getContrasenia());
+    assertEquals(Rol.ADMIN, usuario.getRol());
+    assertEquals(1, usuarioRepository.guardarLlamadas);
+  }
+
+  @Test
+  void modificarUsuarioRechazaMailDeOtroActivo() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    usuarioRepository.add(crearUsuario(1L, "Ana", "ana@example.com", false));
+    usuarioRepository.add(crearUsuario(2L, "Bruno", "bruno@example.com", false));
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    IllegalStateException exception =
+        assertThrows(
+            IllegalStateException.class,
+            () -> service.modificarUsuario(1L, "", "", "bruno@example.com", "", "", null));
+
+    assertEquals("Error: ya existe un usuario activo con ese mail.", exception.getMessage());
+    assertEquals("ana@example.com", usuarioRepository.buscarPorId(1L).orElseThrow().getMail());
+    assertEquals(0, usuarioRepository.guardarLlamadas);
+  }
+
+  @Test
+  void modificarUsuarioRechazaUsuarioEliminado() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    usuarioRepository.add(crearUsuario(1L, "Ana", "ana@example.com", true));
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> service.modificarUsuario(1L, "Ana Maria", "", "", "", "", Rol.USUARIO));
+
+    assertEquals("Error: no existe un usuario activo con el ID indicado.", exception.getMessage());
     assertEquals(0, usuarioRepository.guardarLlamadas);
   }
 
@@ -699,6 +748,18 @@ class CatalogoServiceTest {
       }
       store.put(entity.getId(), entity);
       return entity;
+    }
+
+    @Override
+    public Optional<Usuario> buscarPorId(Long id) {
+      return Optional.ofNullable(store.get(id));
+    }
+
+    @Override
+    public List<Usuario> listarActivos() {
+      return store.values().stream()
+          .filter(usuario -> !Boolean.TRUE.equals(usuario.getEliminado()))
+          .toList();
     }
 
     @Override

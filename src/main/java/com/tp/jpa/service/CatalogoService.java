@@ -3,10 +3,10 @@ package com.tp.jpa.service;
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
 import com.tp.jpa.model.Usuario;
+import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
 import com.tp.jpa.repository.UsuarioRepository;
-import com.tp.jpa.model.enums.Rol;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -48,20 +48,28 @@ public class CatalogoService {
     return productoRepository.listarEliminados();
   }
 
+  public List<Usuario> listarUsuariosActivos() {
+    return usuarioRepository.listarActivos();
+  }
+
+  public Usuario obtenerUsuarioActivo(Long id) {
+    validarId(id, "usuario");
+    Usuario usuario = obtenerUsuario(id);
+    if (Boolean.TRUE.equals(usuario.getEliminado())) {
+      throw new IllegalArgumentException("Error: no existe un usuario activo con el ID indicado.");
+    }
+    return usuario;
+  }
+
   public Usuario crearUsuario(
-      String nombre,
-      String apellido,
-      String mail,
-      String celular,
-      String contrasenia,
-      Rol rol) {
+      String nombre, String apellido, String mail, String celular, String contrasenia, Rol rol) {
     String nombreNormalizado = requerirTexto(nombre, "El nombre del usuario");
     String apellidoNormalizado = requerirTexto(apellido, "El apellido del usuario");
     String mailNormalizado = requerirTexto(mail, "El mail del usuario");
     String celularNormalizado = requerirTexto(celular, "El celular del usuario");
     String contraseniaNormalizada = requerirTexto(contrasenia, "La contrasenia del usuario");
     validarRol(rol);
-    validarMailUnico(mailNormalizado);
+    validarMailUnico(mailNormalizado, null);
 
     Usuario usuario = new Usuario();
     usuario.setNombre(nombreNormalizado);
@@ -72,6 +80,42 @@ public class CatalogoService {
     usuario.setRol(rol);
     usuario.setEliminado(false);
     usuario.setCreatedAt(LocalDateTime.now());
+    return usuarioRepository.guardar(usuario);
+  }
+
+  public Usuario modificarUsuario(
+      Long id,
+      String nombre,
+      String apellido,
+      String mail,
+      String celular,
+      String contrasenia,
+      Rol rol) {
+    validarId(id, "usuario");
+    Usuario usuario = obtenerUsuarioActivo(id);
+    if (nombre != null && !nombre.isBlank()) {
+      usuario.setNombre(requerirTexto(nombre, "El nombre del usuario"));
+    }
+    if (apellido != null && !apellido.isBlank()) {
+      usuario.setApellido(requerirTexto(apellido, "El apellido del usuario"));
+    }
+    if (mail != null && !mail.isBlank()) {
+      String mailNormalizado = requerirTexto(mail, "El mail del usuario");
+      if (!mailNormalizado.equalsIgnoreCase(usuario.getMail())) {
+        validarMailUnico(mailNormalizado, id);
+      }
+      usuario.setMail(mailNormalizado);
+    }
+    if (celular != null && !celular.isBlank()) {
+      usuario.setCelular(requerirTexto(celular, "El celular del usuario"));
+    }
+    if (contrasenia != null && !contrasenia.isBlank()) {
+      usuario.setContrasenia(requerirTexto(contrasenia, "La contrasenia del usuario"));
+    }
+    if (rol != null) {
+      validarRol(rol);
+      usuario.setRol(rol);
+    }
     return usuarioRepository.guardar(usuario);
   }
 
@@ -262,6 +306,16 @@ public class CatalogoService {
                     "Error: no existe un producto activo con el ID indicado."));
   }
 
+  private Usuario obtenerUsuario(Long id) {
+    validarId(id, "usuario");
+    return usuarioRepository
+        .buscarPorId(id)
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Error: no existe un usuario activo con el ID indicado."));
+  }
+
   private Categoria referenciaCategoria(Categoria categoria) {
     Categoria referencia = new Categoria();
     referencia.setId(categoria.getId());
@@ -297,11 +351,12 @@ public class CatalogoService {
     }
   }
 
-  private void validarMailUnico(String mail) {
+  private void validarMailUnico(String mail, Long usuarioIdActual) {
     Optional<Usuario> usuarioExistente = usuarioRepository.buscarPorMail(mail);
     if (usuarioExistente.isPresent()
         && usuarioExistente.get().getMail() != null
-        && usuarioExistente.get().getMail().equalsIgnoreCase(mail)) {
+        && usuarioExistente.get().getMail().equalsIgnoreCase(mail)
+        && (usuarioIdActual == null || !usuarioIdActual.equals(usuarioExistente.get().getId()))) {
       throw new IllegalStateException("Error: ya existe un usuario activo con ese mail.");
     }
   }

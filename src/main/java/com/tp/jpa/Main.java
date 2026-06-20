@@ -10,6 +10,7 @@ import static com.tp.jpa.util.ConsolaUtils.prompt;
 
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
+import com.tp.jpa.model.Usuario;
 import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
@@ -143,9 +144,10 @@ public class Main {
     boolean volver = false;
     while (!volver) {
       mostrarMenuUsuarios();
-      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1"));
+      String opcion = entrada.leerOpcion(prompt("Seleccione una opcion"), Set.of("0", "1", "2"));
       switch (opcion) {
         case "1" -> altaUsuario();
+        case "2" -> modificarUsuario();
         case "0" -> volver = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -453,6 +455,71 @@ public class Main {
     }
   }
 
+  private void modificarUsuario() {
+    imprimirTitulo("Modificar usuario");
+    List<Usuario> usuarios = catalogoService.listarUsuariosActivos();
+    if (usuarios.isEmpty()) {
+      imprimirMensaje("No hay usuarios activos para modificar.");
+      return;
+    }
+
+    imprimirUsuarios(usuarios);
+    Set<Long> idsValidos =
+        usuarios.stream().map(Usuario::getId).collect(java.util.stream.Collectors.toSet());
+    long id =
+        entrada.leerLong(
+            prompt("Ingrese ID de usuario"),
+            idsValidos::contains,
+            "Error: no existe un usuario activo con el ID indicado.");
+
+    Usuario usuario;
+    try {
+      usuario = catalogoService.obtenerUsuarioActivo(id);
+    } catch (RuntimeException exception) {
+      imprimirError(exception.getMessage());
+      return;
+    }
+
+    imprimirValoresActuales(
+        new String[][] {
+          {"Nombre", usuario.getNombre()},
+          {"Apellido", usuario.getApellido()},
+          {"Mail", usuario.getMail()},
+          {"Celular", usuario.getCelular()},
+          {"Rol", usuario.getRol() == null ? "" : usuario.getRol().name()},
+          {"Contrasenia", "********"}
+        });
+
+    String nombre = leerLinea(prompt("Nuevo nombre (enter para conservar)"));
+    String apellido = leerLinea(prompt("Nuevo apellido (enter para conservar)"));
+    String mail = leerLinea(prompt("Nuevo mail (enter para conservar)"));
+    String celular = leerLinea(prompt("Nuevo celular (enter para conservar)"));
+    String contrasenia = leerLinea(prompt("Nueva contrasenia (enter para conservar)"));
+
+    System.out.println("Rol");
+    imprimirOpcion("1", "ADMIN");
+    imprimirOpcion("2", "USUARIO");
+    String rolTexto = leerLinea(prompt("Nuevo rol (ADMIN/USUARIO, enter para conservar)"));
+    Rol rol = null;
+    if (!rolTexto.isBlank()) {
+      if ("ADMIN".equalsIgnoreCase(rolTexto.trim())) {
+        rol = Rol.ADMIN;
+      } else if ("USUARIO".equalsIgnoreCase(rolTexto.trim())) {
+        rol = Rol.USUARIO;
+      } else {
+        imprimirError("Error: el rol ingresado no es valido.");
+        return;
+      }
+    }
+
+    try {
+      catalogoService.modificarUsuario(id, nombre, apellido, mail, celular, contrasenia, rol);
+      imprimirMensaje("Usuario modificado correctamente.");
+    } catch (RuntimeException exception) {
+      imprimirError("No se modifico el usuario: " + exception.getMessage());
+    }
+  }
+
   private void modificarCategoria() {
     imprimirTitulo("Modificar categoria");
     List<Categoria> categorias = catalogoService.listarCategoriasActivas();
@@ -595,6 +662,23 @@ public class Main {
             .toList());
   }
 
+  private void imprimirUsuarios(List<Usuario> usuarios) {
+    imprimirTabla(
+        new String[] {"ID", "Nombre", "Apellido", "Mail", "Celular", "Rol"},
+        usuarios.stream()
+            .map(
+                usuario ->
+                    new String[] {
+                      usuario.getId().toString(),
+                      usuario.getNombre(),
+                      usuario.getApellido(),
+                      usuario.getMail(),
+                      usuario.getCelular(),
+                      usuario.getRol() == null ? "" : usuario.getRol().name()
+                    })
+            .toList());
+  }
+
   private void imprimirProductosReporte(List<Producto> productos) {
     imprimirTabla(
         new String[] {"ID", "Nombre", "Descripcion", "Precio", "Stock"},
@@ -674,6 +758,7 @@ public class Main {
     System.out.println("Usuarios");
     System.out.println(SEPARADOR);
     imprimirOpcion("1", "Alta de usuario");
+    imprimirOpcion("2", "Modificar usuario");
     imprimirOpcion("0", "Volver");
     System.out.println(SEPARADOR);
   }

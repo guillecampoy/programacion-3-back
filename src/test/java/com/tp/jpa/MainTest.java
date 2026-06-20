@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
 import com.tp.jpa.model.Usuario;
+import com.tp.jpa.model.enums.Rol;
 import com.tp.jpa.repository.CategoriaRepository;
 import com.tp.jpa.repository.ProductoRepository;
 import com.tp.jpa.repository.UsuarioRepository;
 import com.tp.jpa.seed.PersistenciaInicial;
 import com.tp.jpa.service.CatalogoService;
-import com.tp.jpa.model.enums.Rol;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -189,6 +189,18 @@ class MainTest {
       }
       store.put(entity.getId(), entity);
       return entity;
+    }
+
+    @Override
+    public Optional<Usuario> buscarPorId(Long id) {
+      return Optional.ofNullable(store.get(id));
+    }
+
+    @Override
+    public List<Usuario> listarActivos() {
+      return store.values().stream()
+          .filter(usuario -> !Boolean.TRUE.equals(usuario.getEliminado()))
+          .collect(Collectors.toList());
     }
 
     @Override
@@ -507,8 +519,7 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     Categoria cat = crearCategoria(1, "Bebidas");
     catRepo.add(cat);
-    Scanner scanner =
-        new Scanner("2\n1\n1\nCafe\nCafe molido\n1500.00\n10\ncafe.png\nsi\n0\n0\n");
+    Scanner scanner = new Scanner("2\n1\n1\nCafe\nCafe molido\n1500.00\n10\ncafe.png\nsi\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
@@ -534,8 +545,7 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     Categoria cat = crearCategoria(1, "Bebidas");
     catRepo.add(cat);
-    Scanner scanner =
-        new Scanner("2\n1\n1\nTe\nTe verde\n0\n10.50\n5\nte.png\nno\n0\n0\n");
+    Scanner scanner = new Scanner("2\n1\n1\nTe\nTe verde\n0\n10.50\n5\nte.png\nno\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
@@ -548,8 +558,7 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     Categoria cat = crearCategoria(1, "Bebidas");
     catRepo.add(cat);
-    Scanner scanner =
-        new Scanner("2\n1\n1\nAgua\nAgua mineral\n1.50\n-1\n5\nagua.png\nsi\n0\n0\n");
+    Scanner scanner = new Scanner("2\n1\n1\nAgua\nAgua mineral\n1.50\n-1\n5\nagua.png\nsi\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
@@ -768,8 +777,7 @@ class MainTest {
     FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
-    Scanner scanner =
-        new Scanner("5\n1\nAna\nGomez\nana@example.com\n1234\nClave123\n2\n0\n0\n");
+    Scanner scanner = new Scanner("5\n1\nAna\nGomez\nana@example.com\n1234\nClave123\n2\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 
@@ -785,8 +793,7 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
     userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
-    Scanner scanner =
-        new Scanner("5\n1\nAna2\nGomez\nana@example.com\n1234\nClave123\n1\n0\n0\n");
+    Scanner scanner = new Scanner("5\n1\nAna2\nGomez\nana@example.com\n1234\nClave123\n1\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 
@@ -810,6 +817,45 @@ class MainTest {
     assertTrue(output.contains("Opcion invalida"));
     assertTrue(output.contains("Usuario creado correctamente"));
     assertEquals(Rol.ADMIN, userRepo.buscarPorMail("bruno@example.com").orElseThrow().getRol());
+  }
+
+  @Test
+  void testModificarUsuario() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
+    userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
+    Scanner scanner =
+        new Scanner("5\n2\n1\nAna Maria\n\nana.nueva@example.com\n\nNuevaClave\nUSUARIO\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo, userRepo);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("Usuario modificado correctamente"));
+    Usuario modificado = userRepo.buscarPorId(1L).orElseThrow();
+    assertEquals("Ana Maria", modificado.getNombre());
+    assertEquals("Apellido Ana", modificado.getApellido());
+    assertEquals("ana.nueva@example.com", modificado.getMail());
+    assertEquals("123456", modificado.getCelular());
+    assertEquals("NuevaClave", modificado.getContrasenia());
+    assertEquals(Rol.USUARIO, modificado.getRol());
+  }
+
+  @Test
+  void testModificarUsuarioMailDuplicado() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
+    userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
+    userRepo.add(crearUsuario(2L, "Bruno", "bruno@example.com", false));
+    Scanner scanner = new Scanner("5\n2\n1\n\n\nbruno@example.com\n\n\n\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo, userRepo);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("No se modifico el usuario"));
+    assertTrue(output.contains("ya existe un usuario activo con ese mail"));
+    assertEquals("ana@example.com", userRepo.buscarPorId(1L).orElseThrow().getMail());
   }
 
   // ===== ENTIDADES TEST =====

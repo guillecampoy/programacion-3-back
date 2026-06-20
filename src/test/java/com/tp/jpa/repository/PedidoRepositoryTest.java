@@ -81,7 +81,8 @@ class PedidoRepositoryTest {
     List<Pedido> pedidosAna = pedidoRepository.buscarPorUsuario(ana.getId());
 
     assertEquals(2, pedidosAna.size());
-    assertTrue(pedidosAna.stream().allMatch(pedido -> pedido.getUsuario().getId().equals(ana.getId())));
+    assertTrue(
+        pedidosAna.stream().allMatch(pedido -> pedido.getUsuario().getId().equals(ana.getId())));
     assertTrue(pedidosAna.stream().anyMatch(pedido -> pedido.getId().equals(pedidoAna1.getId())));
     assertTrue(pedidosAna.stream().anyMatch(pedido -> pedido.getId().equals(pedidoAna2.getId())));
   }

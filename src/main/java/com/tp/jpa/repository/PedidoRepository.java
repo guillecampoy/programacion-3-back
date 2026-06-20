@@ -17,8 +17,7 @@ public class PedidoRepository extends BaseRepository<Pedido> {
       // Consulta JPQL que obtiene los pedidos activos asociados al usuario indicado.
       TypedQuery<Pedido> query =
           entityManager.createQuery(
-              "select p from Pedido p "
-                  + "where p.usuario.id = :uid and p.eliminado = false",
+              "select p from Pedido p " + "where p.usuario.id = :uid and p.eliminado = false",
               Pedido.class);
       query.setParameter("uid", idUsuario);
       return query.getResultList();

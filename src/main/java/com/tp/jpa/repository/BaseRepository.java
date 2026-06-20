@@ -5,8 +5,8 @@ import com.tp.jpa.util.JPAUtil;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import java.util.List;
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 
 public abstract class BaseRepository<T> {
   private final Class<T> entityClass;
