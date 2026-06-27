@@ -107,6 +107,7 @@ HU-01 queda implementada en `BaseRepository<T>`, que resuelve la infraestructura
 4. Borrado logico con `eliminarLogico()`, mantenido como la firma pedida por la rubrica y delegando en `cambiarEstadoEliminado(id, true)`.
 5. Compatibilidad con `cambiarEstadoEliminado()` para el resto del proyecto, centralizando ahi la logica real aunque este paso podria unificarse mas adelante.
 6. Obtencion del siguiente id logico cuando hace falta para pruebas o utilidades.
+7. Altas y modificaciones desacopladas mediante DTOs de entrada en la capa de servicio, como base para una futura API.
 
 HU-02 queda implementada en los repositorios concretos:
 

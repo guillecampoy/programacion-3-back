@@ -1,5 +1,11 @@
 package com.tp.jpa.service;
 
+import com.tp.jpa.dtos.CategoriaAltaDTO;
+import com.tp.jpa.dtos.CategoriaModificacionDTO;
+import com.tp.jpa.dtos.ProductoAltaDTO;
+import com.tp.jpa.dtos.ProductoModificacionDTO;
+import com.tp.jpa.dtos.UsuarioAltaDTO;
+import com.tp.jpa.dtos.UsuarioModificacionDTO;
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Pedido;
 import com.tp.jpa.model.Producto;
@@ -210,12 +216,17 @@ public class CatalogoService {
 
   public Usuario crearUsuario(
       String nombre, String apellido, String mail, String celular, String contrasenia, Rol rol) {
-    String nombreNormalizado = requerirTexto(nombre, "El nombre del usuario");
-    String apellidoNormalizado = requerirTexto(apellido, "El apellido del usuario");
-    String mailNormalizado = requerirTexto(mail, "El mail del usuario");
-    String celularNormalizado = requerirTexto(celular, "El celular del usuario");
-    String contraseniaNormalizada = requerirTexto(contrasenia, "La contrasenia del usuario");
-    validarRol(rol);
+    return crearUsuario(new UsuarioAltaDTO(nombre, apellido, mail, celular, contrasenia, rol));
+  }
+
+  public Usuario crearUsuario(UsuarioAltaDTO dto) {
+    validarDtoNoNulo(dto, "usuario");
+    String nombreNormalizado = requerirTexto(dto.nombre(), "El nombre del usuario");
+    String apellidoNormalizado = requerirTexto(dto.apellido(), "El apellido del usuario");
+    String mailNormalizado = requerirTexto(dto.mail(), "El mail del usuario");
+    String celularNormalizado = requerirTexto(dto.celular(), "El celular del usuario");
+    String contraseniaNormalizada = requerirTexto(dto.contrasenia(), "La contrasenia del usuario");
+    validarRol(dto.rol());
     validarMailUnico(mailNormalizado, null);
 
     Usuario usuario = new Usuario();
@@ -224,7 +235,7 @@ public class CatalogoService {
     usuario.setMail(mailNormalizado);
     usuario.setCelular(celularNormalizado);
     usuario.setContrasenia(contraseniaNormalizada);
-    usuario.setRol(rol);
+    usuario.setRol(dto.rol());
     usuario.setEliminado(false);
     usuario.setCreatedAt(LocalDateTime.now());
     return usuarioRepository.guardar(usuario);
@@ -238,30 +249,36 @@ public class CatalogoService {
       String celular,
       String contrasenia,
       Rol rol) {
-    validarId(id, "usuario");
-    Usuario usuario = obtenerUsuarioActivo(id);
-    if (nombre != null && !nombre.isBlank()) {
-      usuario.setNombre(requerirTexto(nombre, "El nombre del usuario"));
+    return modificarUsuario(
+        new UsuarioModificacionDTO(id, nombre, apellido, mail, celular, contrasenia, rol));
+  }
+
+  public Usuario modificarUsuario(UsuarioModificacionDTO dto) {
+    validarDtoNoNulo(dto, "modificacion de usuario");
+    validarId(dto.id(), "usuario");
+    Usuario usuario = obtenerUsuarioActivo(dto.id());
+    if (dto.nombre() != null && !dto.nombre().isBlank()) {
+      usuario.setNombre(requerirTexto(dto.nombre(), "El nombre del usuario"));
     }
-    if (apellido != null && !apellido.isBlank()) {
-      usuario.setApellido(requerirTexto(apellido, "El apellido del usuario"));
+    if (dto.apellido() != null && !dto.apellido().isBlank()) {
+      usuario.setApellido(requerirTexto(dto.apellido(), "El apellido del usuario"));
     }
-    if (mail != null && !mail.isBlank()) {
-      String mailNormalizado = requerirTexto(mail, "El mail del usuario");
+    if (dto.mail() != null && !dto.mail().isBlank()) {
+      String mailNormalizado = requerirTexto(dto.mail(), "El mail del usuario");
       if (!mailNormalizado.equalsIgnoreCase(usuario.getMail())) {
-        validarMailUnico(mailNormalizado, id);
+        validarMailUnico(mailNormalizado, dto.id());
       }
       usuario.setMail(mailNormalizado);
     }
-    if (celular != null && !celular.isBlank()) {
-      usuario.setCelular(requerirTexto(celular, "El celular del usuario"));
+    if (dto.celular() != null && !dto.celular().isBlank()) {
+      usuario.setCelular(requerirTexto(dto.celular(), "El celular del usuario"));
     }
-    if (contrasenia != null && !contrasenia.isBlank()) {
-      usuario.setContrasenia(requerirTexto(contrasenia, "La contrasenia del usuario"));
+    if (dto.contrasenia() != null && !dto.contrasenia().isBlank()) {
+      usuario.setContrasenia(requerirTexto(dto.contrasenia(), "La contrasenia del usuario"));
     }
-    if (rol != null) {
-      validarRol(rol);
-      usuario.setRol(rol);
+    if (dto.rol() != null) {
+      validarRol(dto.rol());
+      usuario.setRol(dto.rol());
     }
     return usuarioRepository.guardar(usuario);
   }
@@ -276,8 +293,13 @@ public class CatalogoService {
   }
 
   public Categoria crearCategoria(String nombre, String descripcion) {
-    String nombreNormalizado = requerirTexto(nombre, "El nombre de la categoria");
-    String descripcionNormalizada = descripcion == null ? "" : descripcion.trim();
+    return crearCategoria(new CategoriaAltaDTO(nombre, descripcion));
+  }
+
+  public Categoria crearCategoria(CategoriaAltaDTO dto) {
+    validarDtoNoNulo(dto, "categoria");
+    String nombreNormalizado = requerirTexto(dto.nombre(), "El nombre de la categoria");
+    String descripcionNormalizada = dto.descripcion() == null ? "" : dto.descripcion().trim();
 
     Categoria categoria = new Categoria();
     categoria.setNombre(nombreNormalizado);
@@ -288,13 +310,18 @@ public class CatalogoService {
   }
 
   public Categoria modificarCategoria(Long id, String nombre, String descripcion) {
-    validarId(id, "categoria");
-    Categoria categoria = obtenerCategoriaActiva(id);
-    if (nombre != null && !nombre.isBlank()) {
-      categoria.setNombre(requerirTexto(nombre, "El nombre de la categoria"));
+    return modificarCategoria(new CategoriaModificacionDTO(id, nombre, descripcion));
+  }
+
+  public Categoria modificarCategoria(CategoriaModificacionDTO dto) {
+    validarDtoNoNulo(dto, "modificacion de categoria");
+    validarId(dto.id(), "categoria");
+    Categoria categoria = obtenerCategoriaActiva(dto.id());
+    if (dto.nombre() != null && !dto.nombre().isBlank()) {
+      categoria.setNombre(requerirTexto(dto.nombre(), "El nombre de la categoria"));
     }
-    if (descripcion != null && !descripcion.isBlank()) {
-      categoria.setDescripcion(requerirTexto(descripcion, "La descripcion de la categoria"));
+    if (dto.descripcion() != null && !dto.descripcion().isBlank()) {
+      categoria.setDescripcion(requerirTexto(dto.descripcion(), "La descripcion de la categoria"));
     }
     return categoriaRepository.guardar(categoria);
   }
@@ -336,21 +363,27 @@ public class CatalogoService {
       int stock,
       String imagen,
       boolean disponible) {
-    validarId(categoriaId, "categoria");
-    String nombreNormalizado = requerirTexto(nombre, "El nombre del producto");
-    String descripcionNormalizada = requerirTexto(descripcion, "La descripcion del producto");
-    String imagenNormalizada = requerirTexto(imagen, "La imagen del producto");
-    validarPrecio(precio);
-    validarStock(stock);
+    return crearProducto(
+        new ProductoAltaDTO(categoriaId, nombre, descripcion, precio, stock, imagen, disponible));
+  }
 
-    Categoria categoria = obtenerCategoriaActiva(categoriaId);
+  public Producto crearProducto(ProductoAltaDTO dto) {
+    validarDtoNoNulo(dto, "producto");
+    validarId(dto.categoriaId(), "categoria");
+    String nombreNormalizado = requerirTexto(dto.nombre(), "El nombre del producto");
+    String descripcionNormalizada = requerirTexto(dto.descripcion(), "La descripcion del producto");
+    String imagenNormalizada = requerirTexto(dto.imagen(), "La imagen del producto");
+    validarPrecio(dto.precio());
+    validarStock(dto.stock());
+
+    Categoria categoria = obtenerCategoriaActiva(dto.categoriaId());
     Producto producto = new Producto();
     producto.setNombre(nombreNormalizado);
     producto.setDescripcion(descripcionNormalizada);
-    producto.setPrecio(precio);
-    producto.setStock(stock);
+    producto.setPrecio(dto.precio());
+    producto.setStock(dto.stock());
     producto.setImagen(imagenNormalizada);
-    producto.setDisponible(disponible);
+    producto.setDisponible(dto.disponible());
     producto.setEliminado(false);
     producto.setCreatedAt(LocalDateTime.now());
     producto.setCategoria(referenciaCategoria(categoria));
@@ -359,29 +392,34 @@ public class CatalogoService {
 
   public Producto modificarProducto(
       Long id, String nombre, Double precio, Integer stock, Long categoriaId) {
-    validarId(id, "producto");
-    if (nombre != null && !nombre.isBlank()) {
-      requerirTexto(nombre, "El nombre del producto");
+    return modificarProducto(new ProductoModificacionDTO(id, nombre, precio, stock, categoriaId));
+  }
+
+  public Producto modificarProducto(ProductoModificacionDTO dto) {
+    validarDtoNoNulo(dto, "modificacion de producto");
+    validarId(dto.id(), "producto");
+    if (dto.nombre() != null && !dto.nombre().isBlank()) {
+      requerirTexto(dto.nombre(), "El nombre del producto");
     }
-    if (precio != null) {
-      validarPrecio(precio);
+    if (dto.precio() != null) {
+      validarPrecio(dto.precio());
     }
-    if (stock != null) {
-      validarStock(stock);
+    if (dto.stock() != null) {
+      validarStock(dto.stock());
     }
-    Producto producto = obtenerProductoActivo(id);
+    Producto producto = obtenerProductoActivo(dto.id());
     Categoria nuevaCategoria = null;
-    if (categoriaId != null) {
-      nuevaCategoria = obtenerCategoriaActiva(categoriaId);
+    if (dto.categoriaId() != null) {
+      nuevaCategoria = obtenerCategoriaActiva(dto.categoriaId());
     }
-    if (nombre != null && !nombre.isBlank()) {
-      producto.setNombre(nombre.trim());
+    if (dto.nombre() != null && !dto.nombre().isBlank()) {
+      producto.setNombre(dto.nombre().trim());
     }
-    if (precio != null) {
-      producto.setPrecio(precio);
+    if (dto.precio() != null) {
+      producto.setPrecio(dto.precio());
     }
-    if (stock != null) {
-      producto.setStock(stock);
+    if (dto.stock() != null) {
+      producto.setStock(dto.stock());
     }
     if (nuevaCategoria != null) {
       producto.setCategoria(referenciaCategoria(nuevaCategoria));
@@ -532,6 +570,12 @@ public class CatalogoService {
   private void validarId(Long id, String entidad) {
     if (id == null || id <= 0) {
       throw new IllegalArgumentException("Error: el ID de " + entidad + " debe ser mayor a 0.");
+    }
+  }
+
+  private void validarDtoNoNulo(Object dto, String entidad) {
+    if (dto == null) {
+      throw new IllegalArgumentException("Error: el DTO de " + entidad + " no puede ser nulo.");
     }
   }
 }

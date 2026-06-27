@@ -8,6 +8,12 @@ import static com.tp.jpa.util.ConsolaUtils.imprimirTabla;
 import static com.tp.jpa.util.ConsolaUtils.imprimirTitulo;
 import static com.tp.jpa.util.ConsolaUtils.prompt;
 
+import com.tp.jpa.dtos.CategoriaAltaDTO;
+import com.tp.jpa.dtos.CategoriaModificacionDTO;
+import com.tp.jpa.dtos.ProductoAltaDTO;
+import com.tp.jpa.dtos.ProductoModificacionDTO;
+import com.tp.jpa.dtos.UsuarioAltaDTO;
+import com.tp.jpa.dtos.UsuarioModificacionDTO;
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Pedido;
 import com.tp.jpa.model.Producto;
@@ -21,8 +27,8 @@ import com.tp.jpa.repository.UsuarioRepository;
 import com.tp.jpa.seed.PersistenciaInicial;
 import com.tp.jpa.service.CatalogoService;
 import com.tp.jpa.util.EntradaValidada;
-import com.tp.jpa.util.ManejoErroresConsola;
 import com.tp.jpa.util.JPAUtil;
+import com.tp.jpa.util.ManejoErroresConsola;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
@@ -347,12 +353,14 @@ public class Main {
             idsValidos::contains,
             "Error: no existe una categoria activa con el ID indicado.");
 
-    Categoria categoria = ejecutarConManejoDeErrores(() -> catalogoService.obtenerCategoriaActiva(categoriaId));
+    Categoria categoria =
+        ejecutarConManejoDeErrores(() -> catalogoService.obtenerCategoriaActiva(categoriaId));
     if (categoria == null) {
       return;
     }
     List<Producto> productos =
-        ejecutarConManejoDeErrores(() -> catalogoService.buscarProductosActivosPorCategoria(categoriaId));
+        ejecutarConManejoDeErrores(
+            () -> catalogoService.buscarProductosActivosPorCategoria(categoriaId));
     if (productos == null) {
       return;
     }
@@ -382,7 +390,8 @@ public class Main {
             idsValidos::contains,
             "Error: no existe un usuario activo con el ID indicado.");
 
-    Usuario usuario = ejecutarConManejoDeErrores(() -> catalogoService.obtenerUsuarioActivo(usuarioId));
+    Usuario usuario =
+        ejecutarConManejoDeErrores(() -> catalogoService.obtenerUsuarioActivo(usuarioId));
     if (usuario == null) {
       return;
     }
@@ -536,7 +545,8 @@ public class Main {
     ejecutarConManejoDeErrores(
         "No se modifico el producto: ",
         () -> {
-          catalogoService.modificarProducto(id, nombre, precioFinal, stockFinal, categoriaFinal);
+          catalogoService.modificarProducto(
+              new ProductoModificacionDTO(id, nombre, precioFinal, stockFinal, categoriaFinal));
           imprimirMensaje("Producto modificado correctamente.");
         });
   }
@@ -568,7 +578,8 @@ public class Main {
     ejecutarConManejoDeErrores(
         "No se guardo la categoria: ",
         () -> {
-          Categoria guardada = catalogoService.crearCategoria(nombre, descripcion);
+          Categoria guardada =
+              catalogoService.crearCategoria(new CategoriaAltaDTO(nombre, descripcion));
           imprimirMensaje("Categoria creada correctamente. ID generado: " + guardada.getId());
         });
   }
@@ -591,7 +602,8 @@ public class Main {
         "No se guardo el usuario: ",
         () -> {
           var guardado =
-              catalogoService.crearUsuario(nombre, apellido, mail, celular, contrasenia, rol);
+              catalogoService.crearUsuario(
+                  new UsuarioAltaDTO(nombre, apellido, mail, celular, contrasenia, rol));
           imprimirMensaje("Usuario creado correctamente. ID generado: " + guardado.getId());
         });
   }
@@ -655,7 +667,8 @@ public class Main {
         "No se modifico el usuario: ",
         () -> {
           catalogoService.modificarUsuario(
-              id, nombre, apellido, mail, celular, contrasenia, rolFinal);
+              new UsuarioModificacionDTO(
+                  id, nombre, apellido, mail, celular, contrasenia, rolFinal));
           imprimirMensaje("Usuario modificado correctamente.");
         });
   }
@@ -864,7 +877,8 @@ public class Main {
             idsValidos::contains,
             "Error: no existe una categoria activa con el ID indicado.");
 
-    Categoria categoria = ejecutarConManejoDeErrores(() -> catalogoService.obtenerCategoriaActiva(id));
+    Categoria categoria =
+        ejecutarConManejoDeErrores(() -> catalogoService.obtenerCategoriaActiva(id));
     if (categoria == null) {
       return;
     }
@@ -881,7 +895,7 @@ public class Main {
     ejecutarConManejoDeErrores(
         "No se modifico la categoria: ",
         () -> {
-          catalogoService.modificarCategoria(id, nombre, descripcion);
+          catalogoService.modificarCategoria(new CategoriaModificacionDTO(id, nombre, descripcion));
           imprimirMensaje("Categoria modificada correctamente.");
         });
   }
@@ -897,7 +911,8 @@ public class Main {
     ejecutarConManejoDeErrores(
         () -> {
           CatalogoService.BajaCategoriaResultado resultado = catalogoService.bajaCategoria(id);
-          imprimirMensaje("Categoria dada de baja correctamente: " + resultado.categoria().getNombre());
+          imprimirMensaje(
+              "Categoria dada de baja correctamente: " + resultado.categoria().getNombre());
         });
   }
 
@@ -937,7 +952,8 @@ public class Main {
         () -> {
           Producto guardado =
               catalogoService.crearProducto(
-                  categoriaId, nombre, descripcion, precio, stock, imagen, disponible);
+                  new ProductoAltaDTO(
+                      categoriaId, nombre, descripcion, precio, stock, imagen, disponible));
           imprimirMensaje(
               "Producto creado correctamente. ID generado: "
                   + guardado.getId()

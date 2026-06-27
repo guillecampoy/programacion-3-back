@@ -2,6 +2,10 @@ package com.tp.jpa.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.tp.jpa.dtos.CategoriaAltaDTO;
+import com.tp.jpa.dtos.ProductoAltaDTO;
+import com.tp.jpa.dtos.UsuarioAltaDTO;
+import com.tp.jpa.dtos.UsuarioModificacionDTO;
 import com.tp.jpa.model.Categoria;
 import com.tp.jpa.model.Producto;
 import com.tp.jpa.model.Usuario;
@@ -34,6 +38,20 @@ class CatalogoServiceTest {
   }
 
   @Test
+  void crearCategoriaConDtoDelegaIdALRepositorio() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    CatalogoService service =
+        new CatalogoService(
+            categoriaRepository, new FakeProductoRepository(), new FakeUsuarioRepository());
+
+    Categoria categoria = service.crearCategoria(new CategoriaAltaDTO("Bebidas", "Bebidas varias"));
+
+    assertTrue(categoriaRepository.ultimoGuardadoLlegoSinId);
+    assertEquals("Bebidas", categoria.getNombre());
+    assertEquals("Bebidas varias", categoria.getDescripcion());
+  }
+
+  @Test
   void crearProductoValidaCategoriaActivaYDelegaIdAlRepositorio() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
@@ -45,6 +63,28 @@ class CatalogoServiceTest {
 
     Producto producto =
         service.crearProducto(7L, "Cafe", "Cafe molido", 1500.0, 10, "cafe.png", false);
+
+    assertTrue(productoRepository.ultimoGuardadoLlegoSinId);
+    assertEquals(1L, producto.getId());
+    assertEquals("Cafe", producto.getNombre());
+    assertEquals(7L, producto.getCategoria().getId());
+    assertEquals("cafe.png", producto.getImagen());
+    assertFalse(producto.getDisponible());
+  }
+
+  @Test
+  void crearProductoConDtoValidaCategoriaActivaYDelegaIdAlRepositorio() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    Categoria categoria = crearCategoria(7L, "Bebidas", false);
+    categoriaRepository.add(categoria);
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    Producto producto =
+        service.crearProducto(
+            new ProductoAltaDTO(7L, "Cafe", "Cafe molido", 1500.0, 10, "cafe.png", false));
 
     assertTrue(productoRepository.ultimoGuardadoLlegoSinId);
     assertEquals(1L, producto.getId());
@@ -490,6 +530,24 @@ class CatalogoServiceTest {
   }
 
   @Test
+  void crearUsuarioConDtoDelegaIdYLimpiaBanderas() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    Usuario usuario =
+        service.crearUsuario(
+            new UsuarioAltaDTO("Ana", "Gomez", "ana@example.com", "1234", "Clave123", Rol.ADMIN));
+
+    assertTrue(usuarioRepository.ultimoGuardadoLlegoSinId);
+    assertEquals("Ana", usuario.getNombre());
+    assertEquals(Rol.ADMIN, usuario.getRol());
+    assertFalse(usuario.getEliminado());
+  }
+
+  @Test
   void crearUsuarioRechazaMailActivoDuplicado() {
     FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
     FakeProductoRepository productoRepository = new FakeProductoRepository();
@@ -539,6 +597,29 @@ class CatalogoServiceTest {
     Usuario usuario =
         service.modificarUsuario(
             1L, "Ana Maria", "", "ana.nueva@example.com", "", "NuevaClave", Rol.ADMIN);
+
+    assertEquals("Ana Maria", usuario.getNombre());
+    assertEquals("Apellido Ana", usuario.getApellido());
+    assertEquals("ana.nueva@example.com", usuario.getMail());
+    assertEquals("1234", usuario.getCelular());
+    assertEquals("NuevaClave", usuario.getContrasenia());
+    assertEquals(Rol.ADMIN, usuario.getRol());
+    assertEquals(1, usuarioRepository.guardarLlamadas);
+  }
+
+  @Test
+  void modificarUsuarioConDtoPermiteActualizarCamposYConservarBlancos() {
+    FakeCategoriaRepository categoriaRepository = new FakeCategoriaRepository();
+    FakeProductoRepository productoRepository = new FakeProductoRepository();
+    FakeUsuarioRepository usuarioRepository = new FakeUsuarioRepository();
+    usuarioRepository.add(crearUsuario(1L, "Ana", "ana@example.com", false));
+    CatalogoService service =
+        new CatalogoService(categoriaRepository, productoRepository, usuarioRepository);
+
+    Usuario usuario =
+        service.modificarUsuario(
+            new UsuarioModificacionDTO(
+                1L, "Ana Maria", "", "ana.nueva@example.com", "", "NuevaClave", Rol.ADMIN));
 
     assertEquals("Ana Maria", usuario.getNombre());
     assertEquals("Apellido Ana", usuario.getApellido());
