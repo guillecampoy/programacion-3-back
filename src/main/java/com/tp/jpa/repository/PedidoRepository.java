@@ -8,10 +8,17 @@ import jakarta.persistence.TypedQuery;
 import java.util.List;
 
 public class PedidoRepository extends BaseRepository<Pedido> {
+  /** Crea el repositorio de pedidos. */
   public PedidoRepository() {
     super(Pedido.class);
   }
 
+  /**
+   * Busca los pedidos activos asociados a un usuario.
+   *
+   * @param idUsuario identificador del usuario
+   * @return pedidos activos del usuario
+   */
   public List<Pedido> buscarPorUsuario(Long idUsuario) {
     try (EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager()) {
       // Consulta JPQL que obtiene los pedidos activos asociados al usuario indicado.
@@ -24,6 +31,12 @@ public class PedidoRepository extends BaseRepository<Pedido> {
     }
   }
 
+  /**
+   * Busca los pedidos activos con un estado determinado.
+   *
+   * @param estado estado a filtrar
+   * @return pedidos activos con el estado solicitado
+   */
   public List<Pedido> buscarPorEstado(Estado estado) {
     try (EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager()) {
       // Consulta JPQL que obtiene los pedidos activos filtrados por el estado solicitado.

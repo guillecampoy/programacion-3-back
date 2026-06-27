@@ -11,10 +11,21 @@ import java.util.Optional;
 public abstract class BaseRepository<T> {
   private final Class<T> entityClass;
 
+  /**
+   * Crea el repositorio base para una entidad concreta.
+   *
+   * @param entityClass clase de la entidad administrada por este repositorio
+   */
   protected BaseRepository(Class<T> entityClass) {
     this.entityClass = entityClass;
   }
 
+  /**
+   * Persiste una entidad nueva o actualiza una existente.
+   *
+   * @param entity entidad a guardar
+   * @return la entidad persistida
+   */
   public T guardar(T entity) {
     EntityManager entityManager = crearEntityManager();
     try {
@@ -39,12 +50,23 @@ public abstract class BaseRepository<T> {
     }
   }
 
+  /**
+   * Busca una entidad por su identificador.
+   *
+   * @param id identificador de la entidad
+   * @return entidad encontrada o vacio si no existe
+   */
   public Optional<T> buscarPorId(Long id) {
     try (EntityManager entityManager = crearEntityManager()) {
       return Optional.ofNullable(entityManager.find(entityClass, id));
     }
   }
 
+  /**
+   * Lista todas las entidades activas.
+   *
+   * @return entidades con {@code eliminado = false}
+   */
   public List<T> listarActivos() {
     try (EntityManager entityManager = crearEntityManager()) {
       return entityManager
@@ -54,6 +76,11 @@ public abstract class BaseRepository<T> {
     }
   }
 
+  /**
+   * Lista todas las entidades eliminadas de forma logica.
+   *
+   * @return entidades con {@code eliminado = true}
+   */
   public List<T> listarEliminados() {
     try (EntityManager entityManager = crearEntityManager()) {
       return entityManager
@@ -69,7 +96,7 @@ public abstract class BaseRepository<T> {
    *
    * @param id se corresponde con el ID de la entidad que se desea modificar estado
    * @param eliminado modificador que indica si se borra o restaura
-   * @return
+   * @return entidad actualizada o nula si no existe
    */
   public T cambiarEstadoEliminado(Long id, boolean eliminado) {
     EntityManager entityManager = crearEntityManager();
@@ -94,6 +121,12 @@ public abstract class BaseRepository<T> {
     }
   }
 
+  /**
+   * Marca una entidad como eliminada en forma logica.
+   *
+   * @param id identificador de la entidad
+   * @return {@code true} si se actualizo una entidad, {@code false} en caso contrario
+   */
   public boolean eliminarLogico(Long id) {
     // Corrección aplicada por feedback de la entrega anterior: esta firma queda como el wrapper
     // exigido por la rúbrica y delega en cambiarEstadoEliminado(id, true). Podría unificarse más,
@@ -101,6 +134,11 @@ public abstract class BaseRepository<T> {
     return cambiarEstadoEliminado(id, true) != null;
   }
 
+  /**
+   * Calcula el siguiente identificador logico disponible.
+   *
+   * @return siguiente valor de identificador
+   */
   public long siguienteId() {
     try (EntityManager entityManager = crearEntityManager()) {
       Long maxId =

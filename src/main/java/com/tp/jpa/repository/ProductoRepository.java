@@ -7,10 +7,17 @@ import jakarta.persistence.TypedQuery;
 import java.util.List;
 
 public class ProductoRepository extends BaseRepository<Producto> {
+  /** Crea el repositorio de productos. */
   public ProductoRepository() {
     super(Producto.class);
   }
 
+  /**
+   * Busca los productos activos de una categoria.
+   *
+   * @param categoriaId identificador de la categoria
+   * @return productos activos asociados a la categoria
+   */
   public List<Producto> buscarPorCategoria(Long categoriaId) {
     try (EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager()) {
       // Consulta JPQL que obtiene los productos activos asociados a la categoria indicada.

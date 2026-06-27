@@ -8,10 +8,17 @@ import java.util.List;
 import java.util.Optional;
 
 public class UsuarioRepository extends BaseRepository<Usuario> {
+  /** Crea el repositorio de usuarios. */
   public UsuarioRepository() {
     super(Usuario.class);
   }
 
+  /**
+   * Busca el primer usuario activo cuyo mail coincide de forma parcial.
+   *
+   * @param mail texto a buscar dentro del mail
+   * @return usuario encontrado o vacio si no hay coincidencias validas
+   */
   public Optional<Usuario> buscarPorMail(String mail) {
     if (mail == null || mail.isBlank()) {
       return Optional.empty();

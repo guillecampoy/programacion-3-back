@@ -24,21 +24,40 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Servicio de catalogo para operaciones de alto nivel sobre categorias, productos, usuarios y
+ * pedidos.
+ */
 public class CatalogoService {
   private final CategoriaRepository categoriaRepository;
   private final ProductoRepository productoRepository;
   private final UsuarioRepository usuarioRepository;
   private final PedidoRepository pedidoRepository;
 
+  /** Resultado de una baja logica de categoria. */
   public record BajaCategoriaResultado(Categoria categoria, List<Producto> productosDadosDeBaja) {}
 
+  /** Solicitud de una linea de pedido. */
   public record LineaPedidoSolicitud(Long productoId, int cantidad) {}
 
+  /**
+   * Crea el servicio con repositorios de categoria y producto.
+   *
+   * @param categoriaRepository repositorio de categorias
+   * @param productoRepository repositorio de productos
+   */
   public CatalogoService(
       CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
     this(categoriaRepository, productoRepository, new UsuarioRepository(), new PedidoRepository());
   }
 
+  /**
+   * Crea el servicio con repositorios de categoria, producto y usuario.
+   *
+   * @param categoriaRepository repositorio de categorias
+   * @param productoRepository repositorio de productos
+   * @param usuarioRepository repositorio de usuarios
+   */
   public CatalogoService(
       CategoriaRepository categoriaRepository,
       ProductoRepository productoRepository,
@@ -46,6 +65,14 @@ public class CatalogoService {
     this(categoriaRepository, productoRepository, usuarioRepository, new PedidoRepository());
   }
 
+  /**
+   * Crea el servicio con todos los repositorios necesarios.
+   *
+   * @param categoriaRepository repositorio de categorias
+   * @param productoRepository repositorio de productos
+   * @param usuarioRepository repositorio de usuarios
+   * @param pedidoRepository repositorio de pedidos
+   */
   public CatalogoService(
       CategoriaRepository categoriaRepository,
       ProductoRepository productoRepository,
@@ -57,18 +84,43 @@ public class CatalogoService {
     this.pedidoRepository = pedidoRepository;
   }
 
+  /**
+   * Lista las categorias activas.
+   *
+   * @return categorias activas
+   */
+  /**
+   * Lista las categorias activas.
+   *
+   * @return categorias activas
+   */
   public List<Categoria> listarCategoriasActivas() {
     return categoriaRepository.listarActivos();
   }
 
+  /**
+   * Lista las categorias eliminadas de forma logica.
+   *
+   * @return categorias eliminadas
+   */
   public List<Categoria> listarCategoriasEliminadas() {
     return categoriaRepository.listarEliminados();
   }
 
+  /**
+   * Lista los productos activos.
+   *
+   * @return productos activos
+   */
   public List<Producto> listarProductosActivos() {
     return productoRepository.listarActivos();
   }
 
+  /**
+   * Lista los productos activos y disponibles para pedir.
+   *
+   * @return productos activos, disponibles y con stock
+   */
   public List<Producto> listarProductosDisponiblesParaPedido() {
     return productoRepository.listarActivos().stream()
         .filter(producto -> Boolean.TRUE.equals(producto.getDisponible()))
@@ -77,14 +129,32 @@ public class CatalogoService {
         .toList();
   }
 
+  /**
+   * Lista los productos eliminados de forma logica.
+   *
+   * @return productos eliminados
+   */
   public List<Producto> listarProductosEliminados() {
     return productoRepository.listarEliminados();
   }
 
+  /**
+   * Lista los usuarios activos.
+   *
+   * @return usuarios activos
+   */
   public List<Usuario> listarUsuariosActivos() {
     return usuarioRepository.listarActivos();
   }
 
+  /**
+   * Crea un pedido.
+   *
+   * @param usuarioId identificador del usuario
+   * @param formaPago forma de pago seleccionada
+   * @param lineasPedido lineas que componen el pedido
+   * @return pedido persistido
+   */
   public Pedido crearPedido(
       Long usuarioId, FormaPago formaPago, List<LineaPedidoSolicitud> lineasPedido) {
     validarId(usuarioId, "usuario");
@@ -153,6 +223,12 @@ public class CatalogoService {
     }
   }
 
+  /**
+   * Obtiene un pedido activo por id.
+   *
+   * @param id identificador del pedido
+   * @return pedido activo
+   */
   public Pedido obtenerPedidoActivo(Long id) {
     validarId(id, "pedido");
     Pedido pedido =
@@ -168,6 +244,13 @@ public class CatalogoService {
     return pedido;
   }
 
+  /**
+   * Cambia el estado de un pedido activo.
+   *
+   * @param id identificador del pedido
+   * @param nuevoEstado nuevo estado a asignar
+   * @return pedido actualizado
+   */
   public Pedido cambiarEstadoPedido(Long id, Estado nuevoEstado) {
     validarId(id, "pedido");
     validarEstadoPedido(nuevoEstado);
@@ -176,23 +259,46 @@ public class CatalogoService {
     return pedidoRepository.guardar(pedido);
   }
 
+  /**
+   * Lista los pedidos activos de un usuario.
+   *
+   * @param usuarioId identificador del usuario
+   * @return pedidos activos del usuario
+   */
   public List<Pedido> listarPedidosActivosPorUsuario(Long usuarioId) {
     validarId(usuarioId, "usuario");
     obtenerUsuarioActivo(usuarioId);
     return pedidoRepository.buscarPorUsuario(usuarioId);
   }
 
+  /**
+   * Lista los pedidos activos por estado.
+   *
+   * @param estado estado a filtrar
+   * @return pedidos activos con el estado indicado
+   */
   public List<Pedido> listarPedidosActivosPorEstado(Estado estado) {
     validarEstadoPedido(estado);
     return pedidoRepository.buscarPorEstado(estado);
   }
 
+  /**
+   * Calcula el total facturado por pedidos terminados.
+   *
+   * @return total facturado
+   */
   public double totalFacturadoTerminados() {
     return pedidoRepository.buscarPorEstado(Estado.TERMINADO).stream()
         .mapToDouble(pedido -> pedido.getTotal() == null ? 0.0 : pedido.getTotal())
         .sum();
   }
 
+  /**
+   * Da de baja logicamente un pedido.
+   *
+   * @param id identificador del pedido
+   * @return pedido dado de baja
+   */
   public Pedido bajaPedido(Long id) {
     validarId(id, "pedido");
     Pedido pedido = obtenerPedidoActivo(id);
@@ -205,6 +311,12 @@ public class CatalogoService {
     return pedido;
   }
 
+  /**
+   * Obtiene un usuario activo por id.
+   *
+   * @param id identificador del usuario
+   * @return usuario activo
+   */
   public Usuario obtenerUsuarioActivo(Long id) {
     validarId(id, "usuario");
     Usuario usuario = obtenerUsuario(id);
@@ -214,11 +326,28 @@ public class CatalogoService {
     return usuario;
   }
 
+  /**
+   * Crea un usuario a partir de parametros planos.
+   *
+   * @param nombre nombre del usuario
+   * @param apellido apellido del usuario
+   * @param mail mail del usuario
+   * @param celular celular del usuario
+   * @param contrasenia contrasenia del usuario
+   * @param rol rol del usuario
+   * @return usuario persistido
+   */
   public Usuario crearUsuario(
       String nombre, String apellido, String mail, String celular, String contrasenia, Rol rol) {
     return crearUsuario(new UsuarioAltaDTO(nombre, apellido, mail, celular, contrasenia, rol));
   }
 
+  /**
+   * Crea un usuario a partir de un DTO de entrada.
+   *
+   * @param dto datos de alta
+   * @return usuario persistido
+   */
   public Usuario crearUsuario(UsuarioAltaDTO dto) {
     validarDtoNoNulo(dto, "usuario");
     String nombreNormalizado = requerirTexto(dto.nombre(), "El nombre del usuario");
@@ -241,6 +370,18 @@ public class CatalogoService {
     return usuarioRepository.guardar(usuario);
   }
 
+  /**
+   * Modifica un usuario a partir de parametros planos.
+   *
+   * @param id identificador del usuario
+   * @param nombre nuevo nombre opcional
+   * @param apellido nuevo apellido opcional
+   * @param mail nuevo mail opcional
+   * @param celular nuevo celular opcional
+   * @param contrasenia nueva contrasenia opcional
+   * @param rol nuevo rol opcional
+   * @return usuario actualizado
+   */
   public Usuario modificarUsuario(
       Long id,
       String nombre,
@@ -253,6 +394,12 @@ public class CatalogoService {
         new UsuarioModificacionDTO(id, nombre, apellido, mail, celular, contrasenia, rol));
   }
 
+  /**
+   * Modifica un usuario a partir de un DTO de entrada.
+   *
+   * @param dto datos de modificacion
+   * @return usuario actualizado
+   */
   public Usuario modificarUsuario(UsuarioModificacionDTO dto) {
     validarDtoNoNulo(dto, "modificacion de usuario");
     validarId(dto.id(), "usuario");
@@ -283,6 +430,12 @@ public class CatalogoService {
     return usuarioRepository.guardar(usuario);
   }
 
+  /**
+   * Da de baja logicamente un usuario.
+   *
+   * @param id identificador del usuario
+   * @return usuario dado de baja
+   */
   public Usuario bajaUsuario(Long id) {
     validarId(id, "usuario");
     Usuario usuario = obtenerUsuarioActivo(id);
@@ -292,10 +445,23 @@ public class CatalogoService {
     return usuarioRepository.cambiarEstadoEliminado(id, true);
   }
 
+  /**
+   * Crea una categoria a partir de parametros planos.
+   *
+   * @param nombre nombre de la categoria
+   * @param descripcion descripcion de la categoria
+   * @return categoria persistida
+   */
   public Categoria crearCategoria(String nombre, String descripcion) {
     return crearCategoria(new CategoriaAltaDTO(nombre, descripcion));
   }
 
+  /**
+   * Crea una categoria a partir de un DTO de entrada.
+   *
+   * @param dto datos de alta
+   * @return categoria persistida
+   */
   public Categoria crearCategoria(CategoriaAltaDTO dto) {
     validarDtoNoNulo(dto, "categoria");
     String nombreNormalizado = requerirTexto(dto.nombre(), "El nombre de la categoria");
@@ -309,10 +475,24 @@ public class CatalogoService {
     return categoriaRepository.guardar(categoria);
   }
 
+  /**
+   * Modifica una categoria a partir de parametros planos.
+   *
+   * @param id identificador de la categoria
+   * @param nombre nuevo nombre opcional
+   * @param descripcion nueva descripcion opcional
+   * @return categoria actualizada
+   */
   public Categoria modificarCategoria(Long id, String nombre, String descripcion) {
     return modificarCategoria(new CategoriaModificacionDTO(id, nombre, descripcion));
   }
 
+  /**
+   * Modifica una categoria a partir de un DTO de entrada.
+   *
+   * @param dto datos de modificacion
+   * @return categoria actualizada
+   */
   public Categoria modificarCategoria(CategoriaModificacionDTO dto) {
     validarDtoNoNulo(dto, "modificacion de categoria");
     validarId(dto.id(), "categoria");
@@ -336,6 +516,12 @@ public class CatalogoService {
     return new BajaCategoriaResultado(categoriaBaja, List.of());
   }
 
+  /**
+   * Restaura una categoria eliminada de forma logica.
+   *
+   * @param id identificador de la categoria
+   * @return categoria restaurada
+   */
   public Categoria restaurarCategoria(Long id) {
     validarId(id, "categoria");
     Categoria categoria = obtenerCategoriaPorId(id);
@@ -355,6 +541,18 @@ public class CatalogoService {
     return categoria;
   }
 
+  /**
+   * Crea un producto a partir de parametros planos.
+   *
+   * @param categoriaId identificador de la categoria
+   * @param nombre nombre del producto
+   * @param descripcion descripcion del producto
+   * @param precio precio del producto
+   * @param stock stock inicial
+   * @param imagen imagen del producto
+   * @param disponible estado de disponibilidad
+   * @return producto persistido
+   */
   public Producto crearProducto(
       Long categoriaId,
       String nombre,
@@ -390,6 +588,16 @@ public class CatalogoService {
     return productoRepository.guardar(producto);
   }
 
+  /**
+   * Modifica un producto a partir de parametros planos.
+   *
+   * @param id identificador del producto
+   * @param nombre nuevo nombre opcional
+   * @param precio nuevo precio opcional
+   * @param stock nuevo stock opcional
+   * @param categoriaId nueva categoria opcional
+   * @return producto actualizado
+   */
   public Producto modificarProducto(
       Long id, String nombre, Double precio, Integer stock, Long categoriaId) {
     return modificarProducto(new ProductoModificacionDTO(id, nombre, precio, stock, categoriaId));
@@ -427,6 +635,12 @@ public class CatalogoService {
     return productoRepository.guardar(producto);
   }
 
+  /**
+   * Da de baja logicamente un producto.
+   *
+   * @param id identificador del producto
+   * @return producto dado de baja
+   */
   public Producto bajaProducto(Long id) {
     validarId(id, "producto");
     Producto producto = obtenerProducto(id);
@@ -450,6 +664,12 @@ public class CatalogoService {
     return productoRepository.cambiarEstadoEliminado(id, false);
   }
 
+  /**
+   * Obtiene un producto activo por id.
+   *
+   * @param id identificador del producto
+   * @return producto activo
+   */
   public Producto obtenerProductoActivo(Long id) {
     validarId(id, "producto");
     Producto producto = obtenerProducto(id);
@@ -459,6 +679,12 @@ public class CatalogoService {
     return producto;
   }
 
+  /**
+   * Busca los productos activos de una categoria.
+   *
+   * @param categoriaId identificador de la categoria
+   * @return productos activos de la categoria
+   */
   public List<Producto> buscarProductosActivosPorCategoria(Long categoriaId) {
     validarId(categoriaId, "categoria");
     obtenerCategoriaActiva(categoriaId);
