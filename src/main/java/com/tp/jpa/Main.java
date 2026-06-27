@@ -21,6 +21,7 @@ import com.tp.jpa.repository.UsuarioRepository;
 import com.tp.jpa.seed.PersistenciaInicial;
 import com.tp.jpa.service.CatalogoService;
 import com.tp.jpa.util.EntradaValidada;
+import com.tp.jpa.util.ManejoErroresConsola;
 import com.tp.jpa.util.JPAUtil;
 import java.util.List;
 import java.util.Locale;
@@ -34,6 +35,7 @@ public class Main {
   private final CatalogoService catalogoService;
   private final UsuarioRepository usuarioRepository;
   private final Supplier<PersistenciaInicial.ResumenPersistencia> regeneradorDatos;
+  private final ManejoErroresConsola errores;
 
   public Main(
       Scanner scanner,
@@ -78,11 +80,26 @@ public class Main {
       CatalogoService catalogoService,
       UsuarioRepository usuarioRepository,
       Supplier<PersistenciaInicial.ResumenPersistencia> regeneradorDatos) {
+    this(
+        scanner,
+        catalogoService,
+        usuarioRepository,
+        regeneradorDatos,
+        new ManejoErroresConsola(mensaje -> imprimirError(mensaje)));
+  }
+
+  Main(
+      Scanner scanner,
+      CatalogoService catalogoService,
+      UsuarioRepository usuarioRepository,
+      Supplier<PersistenciaInicial.ResumenPersistencia> regeneradorDatos,
+      ManejoErroresConsola errores) {
     this.scanner = scanner;
     this.entrada = new EntradaValidada(scanner);
     this.catalogoService = catalogoService;
     this.usuarioRepository = usuarioRepository;
     this.regeneradorDatos = regeneradorDatos;
+    this.errores = errores;
   }
 
   Main(
@@ -94,6 +111,7 @@ public class Main {
     this.catalogoService = new CatalogoService(categoriaRepository, productoRepository);
     this.usuarioRepository = new UsuarioRepository();
     this.regeneradorDatos = PersistenciaInicial::regenerarBaseLocal;
+    this.errores = new ManejoErroresConsola(mensaje -> imprimirError(mensaje));
   }
 
   public static void main(String[] args) {
@@ -154,7 +172,7 @@ public class Main {
               + " | Pedidos: "
               + resumen.pedidos());
     } catch (RuntimeException exception) {
-      imprimirError("No se pudo regenerar la base local: " + exception.getMessage());
+      errores.mostrar("No se pudo regenerar la base local: ", exception);
     }
   }
 
@@ -281,12 +299,11 @@ public class Main {
             idsValidos::contains,
             "Error: no existe una categoria eliminada con el ID indicado.");
 
-    try {
-      Categoria categoria = catalogoService.restaurarCategoria(id);
-      imprimirMensaje("Categoria restaurada correctamente: " + categoria.getNombre());
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        () -> {
+          Categoria categoria = catalogoService.restaurarCategoria(id);
+          imprimirMensaje("Categoria restaurada correctamente: " + categoria.getNombre());
+        });
   }
 
   private void restaurarProducto() {
@@ -306,12 +323,11 @@ public class Main {
             idsValidos::contains,
             "Error: no existe un producto eliminado con el ID indicado.");
 
-    try {
-      Producto producto = catalogoService.restaurarProducto(id);
-      imprimirMensaje("Producto restaurado correctamente: " + producto.getNombre());
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        () -> {
+          Producto producto = catalogoService.restaurarProducto(id);
+          imprimirMensaje("Producto restaurado correctamente: " + producto.getNombre());
+        });
   }
 
   private void productosPorCategoria() {
@@ -331,13 +347,13 @@ public class Main {
             idsValidos::contains,
             "Error: no existe una categoria activa con el ID indicado.");
 
-    Categoria categoria;
-    List<Producto> productos;
-    try {
-      categoria = catalogoService.obtenerCategoriaActiva(categoriaId);
-      productos = catalogoService.buscarProductosActivosPorCategoria(categoriaId);
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
+    Categoria categoria = ejecutarConManejoDeErrores(() -> catalogoService.obtenerCategoriaActiva(categoriaId));
+    if (categoria == null) {
+      return;
+    }
+    List<Producto> productos =
+        ejecutarConManejoDeErrores(() -> catalogoService.buscarProductosActivosPorCategoria(categoriaId));
+    if (productos == null) {
       return;
     }
     if (productos.isEmpty()) {
@@ -366,13 +382,13 @@ public class Main {
             idsValidos::contains,
             "Error: no existe un usuario activo con el ID indicado.");
 
-    Usuario usuario;
-    List<Pedido> pedidos;
-    try {
-      usuario = catalogoService.obtenerUsuarioActivo(usuarioId);
-      pedidos = catalogoService.listarPedidosActivosPorUsuario(usuarioId);
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
+    Usuario usuario = ejecutarConManejoDeErrores(() -> catalogoService.obtenerUsuarioActivo(usuarioId));
+    if (usuario == null) {
+      return;
+    }
+    List<Pedido> pedidos =
+        ejecutarConManejoDeErrores(() -> catalogoService.listarPedidosActivosPorUsuario(usuarioId));
+    if (pedidos == null) {
       return;
     }
     if (pedidos.isEmpty()) {
@@ -401,11 +417,9 @@ public class Main {
           default -> Estado.CANCELADO;
         };
 
-    List<Pedido> pedidos;
-    try {
-      pedidos = catalogoService.listarPedidosActivosPorEstado(estado);
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
+    List<Pedido> pedidos =
+        ejecutarConManejoDeErrores(() -> catalogoService.listarPedidosActivosPorEstado(estado));
+    if (pedidos == null) {
       return;
     }
     if (pedidos.isEmpty()) {
@@ -440,11 +454,8 @@ public class Main {
             idsValidos::contains,
             "Error: no existe un producto activo con el ID indicado.");
 
-    Producto producto;
-    try {
-      producto = catalogoService.obtenerProductoActivo(id);
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
+    Producto producto = ejecutarConManejoDeErrores(() -> catalogoService.obtenerProductoActivo(id));
+    if (producto == null) {
       return;
     }
 
@@ -519,12 +530,15 @@ public class Main {
       }
     }
 
-    try {
-      catalogoService.modificarProducto(id, nombre, nuevoPrecio, nuevoStock, nuevaCategoriaId);
-      imprimirMensaje("Producto modificado correctamente.");
-    } catch (RuntimeException exception) {
-      imprimirError("No se modifico el producto: " + exception.getMessage());
-    }
+    final Double precioFinal = nuevoPrecio;
+    final Integer stockFinal = nuevoStock;
+    final Long categoriaFinal = nuevaCategoriaId;
+    ejecutarConManejoDeErrores(
+        "No se modifico el producto: ",
+        () -> {
+          catalogoService.modificarProducto(id, nombre, precioFinal, stockFinal, categoriaFinal);
+          imprimirMensaje("Producto modificado correctamente.");
+        });
   }
 
   private void bajaProducto() {
@@ -535,12 +549,11 @@ public class Main {
             valor -> valor > 0,
             "Error: ingrese un ID numerico mayor a 0.");
 
-    try {
-      Producto producto = catalogoService.bajaProducto(id);
-      imprimirMensaje("Producto dado de baja correctamente: " + producto.getNombre());
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        () -> {
+          Producto producto = catalogoService.bajaProducto(id);
+          imprimirMensaje("Producto dado de baja correctamente: " + producto.getNombre());
+        });
   }
 
   private void altaCategoria() {
@@ -552,12 +565,12 @@ public class Main {
             "Error: el nombre de la categoria es obligatorio. No se guardo la categoria.");
     String descripcion = leerLinea(prompt("Descripcion"));
 
-    try {
-      Categoria guardada = catalogoService.crearCategoria(nombre, descripcion);
-      imprimirMensaje("Categoria creada correctamente. ID generado: " + guardada.getId());
-    } catch (RuntimeException exception) {
-      imprimirError("No se guardo la categoria: " + exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        "No se guardo la categoria: ",
+        () -> {
+          Categoria guardada = catalogoService.crearCategoria(nombre, descripcion);
+          imprimirMensaje("Categoria creada correctamente. ID generado: " + guardada.getId());
+        });
   }
 
   private void altaUsuario() {
@@ -574,13 +587,13 @@ public class Main {
     String rolTexto = entrada.leerOpcion(prompt("Seleccione rol"), Set.of("1", "2"));
     Rol rol = "1".equals(rolTexto) ? Rol.ADMIN : Rol.USUARIO;
 
-    try {
-      var guardado =
-          catalogoService.crearUsuario(nombre, apellido, mail, celular, contrasenia, rol);
-      imprimirMensaje("Usuario creado correctamente. ID generado: " + guardado.getId());
-    } catch (RuntimeException exception) {
-      imprimirError("No se guardo el usuario: " + exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        "No se guardo el usuario: ",
+        () -> {
+          var guardado =
+              catalogoService.crearUsuario(nombre, apellido, mail, celular, contrasenia, rol);
+          imprimirMensaje("Usuario creado correctamente. ID generado: " + guardado.getId());
+        });
   }
 
   private void modificarUsuario() {
@@ -600,11 +613,8 @@ public class Main {
             idsValidos::contains,
             "Error: no existe un usuario activo con el ID indicado.");
 
-    Usuario usuario;
-    try {
-      usuario = catalogoService.obtenerUsuarioActivo(id);
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
+    Usuario usuario = ejecutarConManejoDeErrores(() -> catalogoService.obtenerUsuarioActivo(id));
+    if (usuario == null) {
       return;
     }
 
@@ -640,12 +650,14 @@ public class Main {
       }
     }
 
-    try {
-      catalogoService.modificarUsuario(id, nombre, apellido, mail, celular, contrasenia, rol);
-      imprimirMensaje("Usuario modificado correctamente.");
-    } catch (RuntimeException exception) {
-      imprimirError("No se modifico el usuario: " + exception.getMessage());
-    }
+    final Rol rolFinal = rol;
+    ejecutarConManejoDeErrores(
+        "No se modifico el usuario: ",
+        () -> {
+          catalogoService.modificarUsuario(
+              id, nombre, apellido, mail, celular, contrasenia, rolFinal);
+          imprimirMensaje("Usuario modificado correctamente.");
+        });
   }
 
   private void bajaUsuario() {
@@ -665,16 +677,15 @@ public class Main {
             idsValidos::contains,
             "Error: no existe un usuario activo con el ID indicado.");
 
-    try {
-      Usuario dadoDeBaja = catalogoService.bajaUsuario(id);
-      imprimirMensaje(
-          "Usuario dado de baja correctamente: "
-              + dadoDeBaja.getNombre()
-              + " "
-              + dadoDeBaja.getApellido());
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        () -> {
+          Usuario dadoDeBaja = catalogoService.bajaUsuario(id);
+          imprimirMensaje(
+              "Usuario dado de baja correctamente: "
+                  + dadoDeBaja.getNombre()
+                  + " "
+                  + dadoDeBaja.getApellido());
+        });
   }
 
   private void altaPedido() {
@@ -740,21 +751,21 @@ public class Main {
       return;
     }
 
-    try {
-      Pedido pedido = catalogoService.crearPedido(usuarioId, formaPago, lineas);
-      imprimirMensaje(
-          "Pedido creado correctamente. ID generado: "
-              + pedido.getId()
-              + " | Total: "
-              + pedido.getTotal()
-              + " | Usuario: "
-              + pedido.getUsuario().getNombre()
-              + " "
-              + pedido.getUsuario().getApellido());
-      imprimirDetallePedido(pedido);
-    } catch (RuntimeException exception) {
-      imprimirError("No se pudo crear el pedido: " + exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        "No se pudo crear el pedido: ",
+        () -> {
+          Pedido pedido = catalogoService.crearPedido(usuarioId, formaPago, lineas);
+          imprimirMensaje(
+              "Pedido creado correctamente. ID generado: "
+                  + pedido.getId()
+                  + " | Total: "
+                  + pedido.getTotal()
+                  + " | Usuario: "
+                  + pedido.getUsuario().getNombre()
+                  + " "
+                  + pedido.getUsuario().getApellido());
+          imprimirDetallePedido(pedido);
+        });
   }
 
   private void cambiarEstadoPedido() {
@@ -765,11 +776,8 @@ public class Main {
             valor -> valor > 0,
             "Error: ingrese un ID numerico mayor a 0.");
 
-    Pedido pedido;
-    try {
-      pedido = catalogoService.obtenerPedidoActivo(id);
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
+    Pedido pedido = ejecutarConManejoDeErrores(() -> catalogoService.obtenerPedidoActivo(id));
+    if (pedido == null) {
       return;
     }
 
@@ -789,16 +797,16 @@ public class Main {
           default -> Estado.CANCELADO;
         };
 
-    try {
-      Pedido actualizado = catalogoService.cambiarEstadoPedido(id, nuevoEstado);
-      imprimirMensaje(
-          "Pedido actualizado correctamente. ID: "
-              + actualizado.getId()
-              + " | Estado: "
-              + actualizado.getEstado().name());
-    } catch (RuntimeException exception) {
-      imprimirError("No se pudo cambiar el estado del pedido: " + exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        "No se pudo cambiar el estado del pedido: ",
+        () -> {
+          Pedido actualizado = catalogoService.cambiarEstadoPedido(id, nuevoEstado);
+          imprimirMensaje(
+              "Pedido actualizado correctamente. ID: "
+                  + actualizado.getId()
+                  + " | Estado: "
+                  + actualizado.getEstado().name());
+        });
   }
 
   private void bajaPedido() {
@@ -809,24 +817,21 @@ public class Main {
             valor -> valor > 0,
             "Error: ingrese un ID numerico mayor a 0.");
 
-    Pedido pedido;
-    try {
-      pedido = catalogoService.obtenerPedidoActivo(id);
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
+    Pedido pedido = ejecutarConManejoDeErrores(() -> catalogoService.obtenerPedidoActivo(id));
+    if (pedido == null) {
       return;
     }
 
-    try {
-      Pedido dadoDeBaja = catalogoService.bajaPedido(id);
-      imprimirMensaje(
-          "Pedido dado de baja correctamente. ID: "
-              + dadoDeBaja.getId()
-              + " | Total: "
-              + pedido.getTotal());
-    } catch (RuntimeException exception) {
-      imprimirError("No se pudo dar de baja el pedido: " + exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        "No se pudo dar de baja el pedido: ",
+        () -> {
+          Pedido dadoDeBaja = catalogoService.bajaPedido(id);
+          imprimirMensaje(
+              "Pedido dado de baja correctamente. ID: "
+                  + dadoDeBaja.getId()
+                  + " | Total: "
+                  + pedido.getTotal());
+        });
   }
 
   private void buscarUsuarioPorMail() {
@@ -859,11 +864,8 @@ public class Main {
             idsValidos::contains,
             "Error: no existe una categoria activa con el ID indicado.");
 
-    Categoria categoria;
-    try {
-      categoria = catalogoService.obtenerCategoriaActiva(id);
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
+    Categoria categoria = ejecutarConManejoDeErrores(() -> catalogoService.obtenerCategoriaActiva(id));
+    if (categoria == null) {
       return;
     }
 
@@ -876,12 +878,12 @@ public class Main {
     String nombre = leerLinea(prompt("Nuevo nombre (enter para conservar)"));
     String descripcion = leerLinea(prompt("Nueva descripcion (enter para conservar)"));
 
-    try {
-      catalogoService.modificarCategoria(id, nombre, descripcion);
-      imprimirMensaje("Categoria modificada correctamente.");
-    } catch (RuntimeException exception) {
-      imprimirError("No se modifico la categoria: " + exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        "No se modifico la categoria: ",
+        () -> {
+          catalogoService.modificarCategoria(id, nombre, descripcion);
+          imprimirMensaje("Categoria modificada correctamente.");
+        });
   }
 
   private void bajaCategoria() {
@@ -892,12 +894,11 @@ public class Main {
             valor -> valor > 0,
             "Error: ingrese un ID numerico mayor a 0.");
 
-    try {
-      CatalogoService.BajaCategoriaResultado resultado = catalogoService.bajaCategoria(id);
-      imprimirMensaje("Categoria dada de baja correctamente: " + resultado.categoria().getNombre());
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
-    }
+    ejecutarConManejoDeErrores(
+        () -> {
+          CatalogoService.BajaCategoriaResultado resultado = catalogoService.bajaCategoria(id);
+          imprimirMensaje("Categoria dada de baja correctamente: " + resultado.categoria().getNombre());
+        });
   }
 
   private void altaProducto() {
@@ -918,11 +919,9 @@ public class Main {
             idsValidos::contains,
             "Error: no existe una categoria activa con el ID indicado.");
 
-    Categoria categoria;
-    try {
-      categoria = catalogoService.obtenerCategoriaActiva(categoriaId);
-    } catch (RuntimeException exception) {
-      imprimirError(exception.getMessage());
+    Categoria categoria =
+        ejecutarConManejoDeErrores(() -> catalogoService.obtenerCategoriaActiva(categoriaId));
+    if (categoria == null) {
       return;
     }
 
@@ -933,17 +932,51 @@ public class Main {
     String imagen = entrada.leerTextoNoVacio(prompt("Imagen"));
     boolean disponible = entrada.leerBooleano(prompt("Disponible (s/n)"));
 
+    ejecutarConManejoDeErrores(
+        "No se guardo el producto: ",
+        () -> {
+          Producto guardado =
+              catalogoService.crearProducto(
+                  categoriaId, nombre, descripcion, precio, stock, imagen, disponible);
+          imprimirMensaje(
+              "Producto creado correctamente. ID generado: "
+                  + guardado.getId()
+                  + " | Categoria: "
+                  + categoria.getNombre());
+        });
+  }
+
+  private <T> T ejecutarConManejoDeErrores(Supplier<T> accion) {
     try {
-      Producto guardado =
-          catalogoService.crearProducto(
-              categoriaId, nombre, descripcion, precio, stock, imagen, disponible);
-      imprimirMensaje(
-          "Producto creado correctamente. ID generado: "
-              + guardado.getId()
-              + " | Categoria: "
-              + categoria.getNombre());
+      return accion.get();
     } catch (RuntimeException exception) {
-      imprimirError("No se guardo el producto: " + exception.getMessage());
+      errores.mostrar(exception);
+      return null;
+    }
+  }
+
+  private <T> T ejecutarConManejoDeErrores(String contexto, Supplier<T> accion) {
+    try {
+      return accion.get();
+    } catch (RuntimeException exception) {
+      errores.mostrar(contexto, exception);
+      return null;
+    }
+  }
+
+  private void ejecutarConManejoDeErrores(Runnable accion) {
+    try {
+      accion.run();
+    } catch (RuntimeException exception) {
+      errores.mostrar(exception);
+    }
+  }
+
+  private void ejecutarConManejoDeErrores(String contexto, Runnable accion) {
+    try {
+      accion.run();
+    } catch (RuntimeException exception) {
+      errores.mostrar(contexto, exception);
     }
   }
 

@@ -1112,6 +1112,25 @@ class MainTest {
   }
 
   @Test
+  void testAltaUsuarioErroresSeCentralizanConContexto() {
+    FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
+    FakeProductoRepository prodRepo = new FakeProductoRepository();
+    FakeUsuarioRepository userRepo =
+        new FakeUsuarioRepository() {
+          @Override
+          public Usuario guardar(Usuario entity) {
+            throw new IllegalStateException("Error: no se pudo persistir el usuario.");
+          }
+        };
+    Scanner scanner = new Scanner("5\n1\nAna\nGomez\nana@example.com\n1234\nClave123\n2\n0\n0\n");
+    Main main = new Main(scanner, catRepo, prodRepo, userRepo);
+    ejecutar(main);
+
+    String output = outContent.toString();
+    assertTrue(output.contains("No se guardo el usuario: Error: no se pudo persistir el usuario."));
+  }
+
+  @Test
   void testAltaUsuarioRolValidoLuegoGuarda() {
     FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
     FakeProductoRepository prodRepo = new FakeProductoRepository();
