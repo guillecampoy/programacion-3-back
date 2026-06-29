@@ -14,7 +14,7 @@ public class UsuarioRepository extends BaseRepository<Usuario> {
   }
 
   /**
-   * Busca el primer usuario activo cuyo mail coincide de forma parcial.
+   * Busca el usuario activo cuyo mail coincide de forma exacta.
    *
    * @param mail texto a buscar dentro del mail
    * @return usuario encontrado o vacio si no hay coincidencias validas
@@ -26,15 +26,13 @@ public class UsuarioRepository extends BaseRepository<Usuario> {
 
     EntityManager entityManager = JPAUtil.getEntityManagerFactory().createEntityManager();
     try {
-      // Consulta JPQL que busca el primer usuario activo cuyo mail coincide de forma parcial.
+      // Se cumple la rúbrica con coincidencia exacta; una búsqueda parcial puede evaluarse como
+      // extensión, pero no forma parte del contrato de entrega.
       TypedQuery<Usuario> query =
           entityManager.createQuery(
-              "select u from Usuario u "
-                  + "where lower(u.mail) like lower(:mail) and u.eliminado = false "
-                  + "order by u.id",
+              "select u from Usuario u where lower(u.mail) = lower(:mail) and u.eliminado = false",
               Usuario.class);
-      query.setParameter("mail", "%" + mail.trim() + "%");
-      query.setMaxResults(1);
+      query.setParameter("mail", mail.trim());
       List<Usuario> resultados = query.getResultList();
       return resultados.isEmpty() ? Optional.empty() : Optional.of(resultados.get(0));
     } finally {

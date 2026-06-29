@@ -63,14 +63,21 @@ class UsuarioRepositoryTest {
   }
 
   @Test
-  void testBuscarPorMailParcial() {
+  void testBuscarPorMailExactoIgnoraMayusculasYEspacios() {
     Usuario guardado = repository.guardar(crearUsuario("Ana", "anagarcia@gmail.com"));
     repository.guardar(crearUsuario("Bruno", "bjuarez90@gmail.com"));
 
-    Optional<Usuario> resultado = repository.buscarPorMail("anagarcia");
+    Optional<Usuario> resultado = repository.buscarPorMail("  ANAGARCIA@GMAIL.COM  ");
 
     assertTrue(resultado.isPresent());
     assertEquals(guardado.getId(), resultado.orElseThrow().getId());
+  }
+
+  @Test
+  void testBuscarPorMailNoHaceCoincidenciaParcial() {
+    repository.guardar(crearUsuario("Ana", "anagarcia@gmail.com"));
+
+    assertTrue(repository.buscarPorMail("anagarcia").isEmpty());
   }
 
   @Test

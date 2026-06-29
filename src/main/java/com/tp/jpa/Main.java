@@ -4,6 +4,7 @@ import static com.tp.jpa.util.ConsolaUtils.SEPARADOR;
 import static com.tp.jpa.util.ConsolaUtils.imprimirError;
 import static com.tp.jpa.util.ConsolaUtils.imprimirMensaje;
 import static com.tp.jpa.util.ConsolaUtils.imprimirOpcion;
+import static com.tp.jpa.util.ConsolaUtils.imprimirSubtitulo;
 import static com.tp.jpa.util.ConsolaUtils.imprimirTabla;
 import static com.tp.jpa.util.ConsolaUtils.imprimirTitulo;
 import static com.tp.jpa.util.ConsolaUtils.prompt;
@@ -139,14 +140,16 @@ public class Main {
       mostrarMenuPrincipal();
       String opcion =
           entrada.leerOpcion(
-              prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4", "5", "6"));
+              prompt("Seleccione una opcion"), Set.of("0", "1", "2", "3", "4", "5", "6", "7", "8"));
       switch (opcion) {
         case "1" -> menuCategorias();
         case "2" -> menuProductos();
-        case "3" -> menuReportes();
-        case "4" -> regenerarDatos();
-        case "5" -> menuUsuarios();
-        case "6" -> menuPedidos();
+        case "3" -> menuUsuarios();
+        case "4" -> menuPedidos();
+        case "5" -> menuReportes();
+        case "6" -> regenerarDatos();
+        case "7" -> restaurarCategoria();
+        case "8" -> restaurarProducto();
         case "0" -> salir = true;
         default -> imprimirError("Opcion invalida.");
       }
@@ -1018,7 +1021,7 @@ public class Main {
 
   private void imprimirProductos(List<Producto> productos) {
     imprimirTabla(
-        new String[] {"ID", "Nombre", "Descripcion", "Precio", "Stock", "Categoria"},
+        new String[] {"ID", "Nombre", "Descripcion", "Precio", "Stock", "Disponible", "Categoria"},
         productos.stream()
             .map(
                 p ->
@@ -1028,6 +1031,7 @@ public class Main {
                       p.getDescripcion(),
                       p.getPrecio().toString(),
                       String.valueOf(p.getStock()),
+                      Boolean.TRUE.equals(p.getDisponible()) ? "Si" : "No",
                       p.getCategoria() == null ? "" : p.getCategoria().getNombre()
                     })
             .toList());
@@ -1083,14 +1087,13 @@ public class Main {
 
   private void imprimirProductosReporte(List<Producto> productos) {
     imprimirTabla(
-        new String[] {"ID", "Nombre", "Descripcion", "Precio", "Stock"},
+        new String[] {"ID", "Nombre", "Precio", "Stock"},
         productos.stream()
             .map(
                 p ->
                     new String[] {
                       p.getId().toString(),
                       p.getNombre(),
-                      p.getDescripcion(),
                       p.getPrecio().toString(),
                       String.valueOf(p.getStock())
                     })
@@ -1142,10 +1145,13 @@ public class Main {
     System.out.println(SEPARADOR);
     imprimirOpcion("1", "Categorias");
     imprimirOpcion("2", "Productos");
-    imprimirOpcion("3", "Reportes");
-    imprimirOpcion("4", "Regenerar datos");
-    imprimirOpcion("5", "Usuarios");
-    imprimirOpcion("6", "Pedidos");
+    imprimirOpcion("3", "Usuarios");
+    imprimirOpcion("4", "Pedidos");
+    imprimirOpcion("5", "Reportes");
+    imprimirSubtitulo("Opciones adicionales para pruebas");
+    imprimirOpcion("6", "Regenerar datos");
+    imprimirOpcion("7", "Revertir baja logica de categoria");
+    imprimirOpcion("8", "Revertir baja logica de producto");
     imprimirOpcion("0", "Salir");
     System.out.println(SEPARADOR);
   }

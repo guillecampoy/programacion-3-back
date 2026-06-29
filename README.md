@@ -2,48 +2,80 @@
 
 Backend de consola para el TPI de Programacion III con Java, Gradle, JPA/Hibernate y H2 en archivo.
 
-Esta rama documenta una evolucion sobre la entrega previa: el proyecto ya consolida el nucleo de catalogo y persistencia, mantiene el modelo de dominio alineado con el UML de `docs/diagrama.puml` y suma la busqueda de usuarios por mail, el alta de pedidos, el cambio de estado de pedidos, la baja logica de pedidos y las consultas de pedidos por usuario, por estado y del total facturado desde la consola.
+La referencia de entrega para este proyecto es `docs/TPI.pdf`, contrastada con `docs/diagrama.puml` para preservar las relaciones del dominio. En este repo se implementa el backend evaluable y, aparte, se conservan algunas utilidades de prueba y recuperacion que no cambian la consigna principal.
+
+## Fuente de verdad y criterio de alcance
+
+1. `docs/TPI.pdf` define las historias, las firmas esperadas y la rubricacion del backend.
+2. `docs/diagrama.puml` se toma como contrato fijo de relaciones entre entidades.
+3. Cuando el PDF y una utilidad local no coinciden, la entrega prioriza el PDF.
+4. Las extensiones locales se mantienen separadas para no contaminar lo evaluable.
+
+## Requerido por la rubrica
+
+### Dominio
+
+1. `Base` centraliza `id`, `eliminado` y `createdAt`.
+2. `Categoria`, `Producto`, `Usuario`, `Pedido` y `DetallePedido` conforman el modelo persistente.
+3. `Pedido` implementa `Calculable` y compone sus detalles.
+4. `Producto` referencia una `Categoria`.
+5. `Usuario` referencia sus `Pedido`.
+6. `DetallePedido` referencia `Producto`.
+
+### Repositorios
+
+1. `BaseRepository<T>` implementa `guardar`, `buscarPorId`, `listarActivos` y `eliminarLogico`.
+2. `CategoriaRepository` solo extiende la base.
+3. `ProductoRepository.buscarPorCategoria(Long)` usa JPQL tipado con `:catId`.
+4. `UsuarioRepository.buscarPorMail(String)` usa JPQL tipado con `:mail` y retorna `Optional<Usuario>`.
+5. `PedidoRepository.buscarPorUsuario(Long)` y `buscarPorEstado(Estado)` usan JPQL tipado.
+
+### Consola
+
+1. El menu principal queda ordenado como `Categorias`, `Productos`, `Usuarios`, `Pedidos`, `Reportes`.
+2. El submenu de categorias cubre alta, modificacion, baja logica y listado.
+3. El submenu de productos cubre alta, modificacion, baja logica y listado.
+4. El submenu de usuarios cubre alta, modificacion, baja logica y busqueda por mail.
+5. El submenu de pedidos cubre alta con detalles, cambio de estado y baja logica.
+6. El submenu de reportes cubre productos por categoria, pedidos por usuario, pedidos por estado y total facturado.
+
+### Validacion
+
+1. La operacion de alta de pedido corre en una transaccion unica.
+2. Las bajas son logicas.
+3. Los campos en blanco en modificaciones conservan el valor anterior.
+4. Al salir de la aplicacion se cierra `JPAUtil`.
+
+## Consideraciones adicionales
+
+Estas opciones no forman parte del recorrido evaluable principal, pero se mantienen porque ayudan a probar el sistema sin tocar el contrato del modelo:
+
+1. `Regenerar datos`.
+2. `Revertir baja logica de categoria`.
+3. `Revertir baja logica de producto`.
+
+El menu las muestra separadas del bloque requerido, con una subtitulo propio, para que quede claro que son auxiliares de prueba y no cambian el orden de la entrega.
+
+### Criterio aplicado
+
+1. La busqueda de usuario por mail se dejo exacta porque eso es lo que pide la rubrica; la coincidencia parcial quedo solo como posible ampliacion futura.
+2. El menu principal se reordeno para que la ruta evaluable quede primero y las utilidades de prueba queden al final.
+3. El listado de productos agrega `disponible` porque el PDF lo pide; el reporte por categoria no arrastra columnas extra.
+4. Las opciones de restauracion y regeneracion se conservaron porque facilitan las pruebas manuales, pero no reemplazan el recorrido principal de la entrega.
 
 ## Estado actual
 
-Lo que hoy expone la aplicacion desde consola es:
-
-1. ABM de categorias.
-2. ABM de productos.
-3. Listado de categorias activas.
-4. Listado de productos activos.
-5. Baja logica y restauracion de categorias.
-6. Baja logica y restauracion de productos.
-7. Reporte de productos activos por categoria.
-8. Regeneracion de la base local con semilla inicial.
-9. Alta de usuarios.
-10. Modificacion de usuarios.
-11. Baja de usuarios.
-12. Busqueda de usuarios por mail.
-13. Alta de pedidos con detalles.
-14. Cambio de estado de pedidos.
-15. Baja logica de pedidos.
-16. Consulta de pedidos activos por usuario.
-17. Consulta de pedidos activos por estado.
-18. Reporte de total facturado.
-
-El dominio ya incluye `Usuario`, `Pedido` y `DetallePedido` para sostener la evolucion del modelo, la semilla y los tests de relacion, y ahora esas entidades tambien forman parte del menu operativo.
-
-## Documentacion del proyecto
-
-La carpeta `docs/` funciona como guia de trabajo y backlog.
-
-1. [`docs/README.md`](docs/README.md): orden recomendado de historias y validacion de entrega.
-2. [`docs/00_contexto_restricciones.md`](docs/00_contexto_restricciones.md): reglas tecnicas, estructura esperada y restricciones de implementacion.
-3. [`docs/historias/`](docs/historias/): historias de usuario individuales para el recorrido incremental del backend.
-4. [`docs/diagrama.puml`](docs/diagrama.puml): UML de referencia del modelo. Se conserva sin cambios de relaciones.
+1. El repositorio ya cubre las historias de backend del PDF.
+2. Los tests automaticos cubren repositorios, servicios, modelo, utilidades y flujo de consola.
+3. El orden del menu principal y los reportes se alinean con la rubrica.
+4. Las utilidades adicionales quedan documentadas aparte.
 
 ## Estructura actual
 
 ```text
 src/main/java/com/tp/jpa/
-  Main.java                 # menu de consola
-  H2LocalConsole.java       # consola web de H2
+  Main.java
+  H2LocalConsole.java
   model/
     Base.java
     Categoria.java
@@ -60,6 +92,8 @@ src/main/java/com/tp/jpa/
     BaseRepository.java
     CategoriaRepository.java
     ProductoRepository.java
+    UsuarioRepository.java
+    PedidoRepository.java
   service/
     CatalogoService.java
   seed/
@@ -70,6 +104,7 @@ src/main/java/com/tp/jpa/
     JPAUtil.java
     ConsolaUtils.java
     EntradaValidada.java
+    ManejoErroresConsola.java
 
 src/test/java/com/tp/jpa/
   MainTest.java
@@ -77,321 +112,22 @@ src/test/java/com/tp/jpa/
   model/RelacionesTest.java
   repository/CategoriaRepositoryTest.java
   repository/ProductoRepositoryTest.java
+  repository/PedidoRepositoryTest.java
+  repository/UsuarioRepositoryTest.java
   seed/PersistenciaInicialTest.java
   service/CatalogoServiceTest.java
   service/CatalogoServicePedidosTest.java
   util/EntradaValidadaTest.java
+  util/ManejoErroresConsolaTest.java
 ```
-
-## Modelo de dominio
-
-Las entidades principales respetan la base conceptual del UML:
-
-1. `Base` centraliza `id`, `eliminado` y `createdAt`.
-2. `Categoria` agrupa productos.
-3. `Producto` referencia una categoria.
-4. `Usuario` se relaciona con pedidos.
-5. `Pedido` implementa `Calculable` y compone detalles.
-6. `DetallePedido` referencia un producto.
-7. `UsuarioDTO` existe como representacion de lectura.
-
-La relacion entre clases se mantiene en el marco de lo que ya esta alcanzado por el UML del proyecto. Este README solo describe la estructura actual; el diagrama de clases no se modifica aqui.
-
-## Repositorios
-
-HU-01 queda implementada en `BaseRepository<T>`, que resuelve la infraestructura comun:
-
-1. Guardado con transaccion propia.
-2. Busqueda por id.
-3. Listado de activos.
-4. Borrado logico con `eliminarLogico()`, mantenido como la firma pedida por la rubrica y delegando en `cambiarEstadoEliminado(id, true)`.
-5. Compatibilidad con `cambiarEstadoEliminado()` para el resto del proyecto, centralizando ahi la logica real aunque este paso podria unificarse mas adelante.
-6. Obtencion del siguiente id logico cuando hace falta para pruebas o utilidades.
-7. Altas y modificaciones desacopladas mediante DTOs de entrada en la capa de servicio, como base para una futura API.
-
-HU-02 queda implementada en los repositorios concretos:
-
-1. `CategoriaRepository` extiende `BaseRepository<Categoria>`.
-2. `ProductoRepository` extiende `BaseRepository<Producto>`.
-3. `ProductoRepository.buscarPorCategoria(Long)` ejecuta JPQL tipado con `:catId` y `eliminado = false`.
-4. La consulta devuelve solo productos activos de la categoria indicada.
-
-HU-03 queda implementada en `UsuarioRepository`:
-
-1. `UsuarioRepository` extiende `BaseRepository<Usuario>`.
-2. `buscarPorMail(String)` devuelve `Optional<Usuario>`.
-3. La busqueda soporta coincidencia parcial y excluye usuarios eliminados.
-4. La consulta usa JPQL tipado con `:mail`, `getResultList()` y cierre explicito del `EntityManager`.
-
-HU-04 queda implementada en `PedidoRepository`:
-
-1. `PedidoRepository` extiende `BaseRepository<Pedido>`.
-2. `buscarPorUsuario(Long)` filtra pedidos activos por `usuario.id`.
-3. `buscarPorEstado(Estado)` filtra pedidos activos por estado.
-4. Ambas consultas usan JPQL tipado con parámetros nombrados y cierre explicito del `EntityManager`.
-
-HU-05 queda implementada en el alta de categorias:
-
-1. La consola solicita nombre y descripcion.
-2. El nombre sigue siendo obligatorio.
-3. La descripcion es opcional y se guarda vacia si el operador no ingresa texto.
-4. La categoria se persiste con `eliminado = false` y se muestra el ID generado.
-
-HU-06 queda implementada en la modificacion de categorias:
-
-1. La consola lista categorias activas antes de pedir el ID.
-2. El operador ve los valores actuales antes de editar.
-3. Los campos en blanco conservan el valor previo.
-4. La categoria modificada se persiste en la base.
-
-HU-07 queda implementada en la baja logica de categorias:
-
-1. La consola usa la opcion de baja del submenu de categorias.
-2. La categoria se marca como eliminada sin borrar productos asociados.
-3. La confirmacion muestra el nombre de la categoria dada de baja.
-4. La categoria deja de aparecer en los listados activos.
-
-HU-08 queda implementada en el alta de productos:
-
-1. La consola lista categorias activas antes de pedir los datos del producto.
-2. El alta solicita nombre, descripcion, precio, stock, imagen y disponible.
-3. La categoria seleccionada se asocia al producto guardado.
-4. El producto se persiste con `eliminado = false` y se muestra el ID generado.
-
-HU-09 queda implementada en la modificacion de productos:
-
-1. La consola lista productos activos antes de pedir el ID.
-2. El operador ve los valores actuales antes de editar.
-3. Los campos en blanco conservan el valor previo.
-4. La modificacion valida precio y stock antes de persistir.
-
-HU-10 queda implementada en la baja de productos:
-
-1. La consola usa la opcion de baja del submenu de productos.
-2. El producto se marca como eliminado sin borrar el registro.
-3. La confirmacion muestra el nombre del producto dado de baja.
-4. El producto deja de aparecer en los listados activos.
-
-HU-11 queda implementada en la consulta de productos por categoria:
-
-1. La consola lista categorias activas para seleccionar una.
-2. La consulta usa `ProductoRepository.buscarPorCategoria(Long)`.
-3. Solo devuelve productos activos de la categoria indicada.
-4. El reporte muestra ID, nombre, precio y stock.
-
-HU-12 queda implementada en el alta de usuarios:
-
-1. La consola usa la opcion de usuarios del menu principal.
-2. El alta solicita nombre, apellido, mail, celular, contrasenia y rol.
-3. El mail activo duplicado no se persiste.
-4. El usuario se guarda con `eliminado = false` y se muestra el ID generado.
-
-HU-13 queda implementada en la modificacion de usuarios:
-
-1. La consola lista usuarios activos antes de pedir el ID.
-2. Los valores actuales se muestran antes de editar.
-3. Los campos en blanco conservan el valor previo.
-4. El mail nuevo se valida contra otros usuarios activos antes de persistir.
-
-HU-14 queda implementada en la baja de usuarios:
-
-1. La consola lista usuarios activos antes de pedir el ID.
-2. La baja es logica y conserva el registro.
-3. Se confirma mostrando nombre y apellido del usuario dado de baja.
-4. El usuario deja de aparecer en los listados activos y en la busqueda por mail.
-
-HU-15 queda implementada en la busqueda de usuarios por mail:
-
-1. La consola usa la opcion de usuarios del menu principal.
-2. La busqueda solicita el mail por consola y normaliza espacios con `trim()`.
-3. La consulta delega en `UsuarioRepository.buscarPorMail(String)`.
-4. Si el usuario existe, se muestran sus datos sin exponer la contrasenia.
-5. Si no existe, se informa que no hay un usuario activo con ese mail.
-
-HU-16 queda implementada en el alta de pedidos con detalles:
-
-1. La consola usa la opcion de pedidos del menu principal.
-2. El alta lista usuarios activos y productos disponibles antes de pedir selecciones.
-3. La operacion solicita forma de pago, productos y cantidades, y exige al menos un detalle.
-4. El pedido se registra en una transaccion unica, con estado `PENDIENTE` y fecha actual.
-5. El stock de los productos se descuenta al confirmar el pedido.
-6. La confirmacion muestra ID, total, usuario y el resumen de detalles.
-
-HU-17 queda implementada en el cambio de estado de pedidos:
-
-1. La consola usa la opcion de pedidos del menu principal.
-2. El cambio solicita el ID del pedido y muestra el estado actual.
-3. La operacion permite seleccionar `PENDIENTE`, `CONFIRMADO`, `TERMINADO` o `CANCELADO`.
-4. El pedido debe existir y seguir activo para poder actualizarse.
-5. La confirmacion muestra ID y nuevo estado del pedido.
-
-HU-18 queda implementada en la baja logica de pedidos:
-
-1. La consola usa la opcion de pedidos del menu principal.
-2. La baja solicita el ID del pedido y valida que exista y siga activo.
-3. La baja es logica y conserva el historial, los detalles y el stock.
-4. La confirmacion muestra ID y total del pedido dado de baja.
-
-HU-19 queda implementada en la consulta de pedidos por usuario:
-
-1. La consola usa la opcion de reportes del menu principal.
-2. La consulta lista usuarios activos y exige seleccionar uno valido.
-3. La busqueda delega en `PedidoRepository.buscarPorUsuario(Long)`.
-4. El reporte muestra ID, fecha, estado, forma de pago y total.
-5. Si no hay pedidos activos para ese usuario, se informa explicitamente.
-
-HU-20 queda implementada en la consulta de pedidos por estado:
-
-1. La consola usa la opcion de reportes del menu principal.
-2. La consulta muestra los estados disponibles y exige seleccionar uno valido.
-3. La busqueda delega en `PedidoRepository.buscarPorEstado(Estado)`.
-4. El reporte muestra ID, fecha, nombre de usuario y total.
-5. Si no hay pedidos activos con ese estado, se informa explicitamente.
-
-HU-21 queda implementada en el reporte de total facturado:
-
-1. La consola usa la opcion de reportes del menu principal.
-2. El reporte toma solo pedidos activos en estado `TERMINADO`.
-3. Los totales nulos se consideran cero para no romper el calculo.
-4. La salida se formatea como moneda con dos decimales.
-
-## Capa de servicio
-
-`CatalogoService` concentra la logica de negocio que usa la consola:
-
-1. Crear y modificar categorias.
-2. Crear y modificar productos.
-3. Crear, modificar y dar de baja usuarios.
-4. Ejecutar bajas logicas.
-5. Restaurar registros eliminados.
-6. Validar ids, textos, precio, stock, rol y mail unico.
-7. Resolver el impacto de eliminar una categoria sobre sus productos activos.
-8. Buscar productos activos por categoria.
-9. Registrar pedidos con detalles y descuento atomico de stock.
-10. Cambiar el estado de pedidos activos.
-11. Dar de baja pedidos sin restaurar stock.
-12. Consultar pedidos activos por usuario con JPQL.
-13. Consultar pedidos activos por estado con JPQL.
-14. Reportar total facturado con pedidos terminados.
-
-La consola delega en esta capa para evitar mezclar input de usuario con reglas de negocio.
-
-## Consola
-
-Menu principal actual:
-
-```text
-Sistema JPA - Categorias y Productos
-1. Categorias
-2. Productos
-3. Reportes
-4. Regenerar datos
-5. Usuarios
-6. Pedidos
-0. Salir
-```
-
-Submenu de categorias:
-
-```text
-1. Alta de categoria
-2. Modificar categoria
-3. Baja logica de categoria
-4. Listar categorias activas
-5. Revertir baja logica
-0. Volver
-```
-
-Submenu de productos:
-
-```text
-1. Alta de producto
-2. Modificar producto
-3. Baja logica de producto
-4. Listar productos activos
-5. Revertir baja logica
-0. Volver
-```
-
-Submenu de reportes:
-
-```text
-1. Productos por categoria
-2. Pedidos por usuario
-3. Pedidos por estado
-4. Total facturado
-0. Volver
-```
-
-Submenu de usuarios:
-
-```text
-1. Alta de usuario
-2. Modificar usuario
-3. Baja logica de usuario
-4. Buscar usuario por mail
-0. Volver
-```
-
-Submenu de pedidos:
-
-```text
-1. Alta de pedido
-2. Cambiar estado de pedido
-3. Baja logica de pedido
-0. Volver
-```
-
-## Persistencia
-
-La unidad de persistencia es `miUnidad`, definida en `src/main/resources/META-INF/persistence.xml`.
-
-La base local usa H2 en archivo:
-
-```text
-jdbc:h2:file:./data/jpa_db
-```
-
-Puntos clave:
-
-1. Hibernate administra el esquema con `hbm2ddl.auto=update` en ejecucion local.
-2. `JPAUtil` mantiene una `EntityManagerFactory` unica.
-3. `PersistenciaInicial` carga datos solo si corresponde.
-4. La opcion `Regenerar datos` elimina la base local y vuelve a aplicar la semilla.
-
-## Semilla y datos
-
-La semilla inicial prepara datos reales para trabajar con la consola y para sostener los tests de integracion.
-
-1. `PersistenciaInicial` decide si hay que cargar datos.
-2. `DatosSemillaFactory` construye el escenario inicial.
-3. La carga se apoya en relaciones JPA reales, no en ids manuales sueltos.
 
 ## Validacion
 
-La base del proyecto ya pasa la suite de tests:
+Los comandos que se usan como cierre son:
 
 ```bash
 ./gradlew test
+./gradlew check
 ```
 
-La tarea `build` ejecuta `spotlessApply` automaticamente para dejar un autofix de formato antes del empaquetado.
-
-```bash
-./gradlew build
-./gradlew autofix
-```
-
-La validacion cubre el contrato de HU-01 y el alta de pedidos con pruebas sobre guardado nuevo, guardado con id existente, busqueda, listado activo, borrado logico, transaccion atómica, descuento de stock y rollback.
-
-Tambien cubre HU-17, HU-18, HU-19, HU-20 y HU-21 con pruebas de cambio de estado, baja logica, reportes por usuario, por estado y total facturado, y rechazo de pedidos eliminados.
-
-Y la aplicacion puede ejecutarse desde consola con:
-
-```bash
-./gradlew run
-```
-
-## Proximo tramo
-
-La documentacion de `docs/historias/` marca el backlog incremental que sigue sobre esta base. El objetivo de esa carpeta es guiar la evolucion por historias sin reescribir la estructura ya consolidada ni tocar el UML de referencia.
+`test` valida el comportamiento funcional. `check` agrega Spotless y confirma que el cierre no deja desalineaciones de formato.

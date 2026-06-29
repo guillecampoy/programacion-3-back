@@ -213,7 +213,9 @@ class MainTest {
       }
       return store.values().stream()
           .filter(usuario -> !Boolean.TRUE.equals(usuario.getEliminado()))
-          .filter(usuario -> usuario.getMail() != null && usuario.getMail().equalsIgnoreCase(mail))
+          .filter(
+              usuario ->
+                  usuario.getMail() != null && usuario.getMail().equalsIgnoreCase(mail.trim()))
           .findFirst();
     }
 
@@ -420,7 +422,7 @@ class MainTest {
     FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     AtomicBoolean regenerado = new AtomicBoolean(false);
-    Scanner scanner = new Scanner("4\ns\n0\n");
+    Scanner scanner = new Scanner("6\ns\n0\n");
     Main main =
         new Main(
             scanner,
@@ -443,7 +445,7 @@ class MainTest {
     FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     AtomicBoolean regenerado = new AtomicBoolean(false);
-    Scanner scanner = new Scanner("4\nn\n0\n");
+    Scanner scanner = new Scanner("6\nn\n0\n");
     Main main =
         new Main(
             scanner,
@@ -825,7 +827,8 @@ class MainTest {
     String output = outContent.toString();
     assertTrue(output.contains("Productos activos"));
     assertTrue(output.contains("Cafe"));
-    assertTrue(output.contains("Desc Cafe"));
+    assertTrue(output.contains("Disponible"));
+    assertTrue(output.contains("Si"));
     assertFalse(output.contains("Archivado"));
   }
 
@@ -868,7 +871,7 @@ class MainTest {
     catRepo.add(cat);
     Producto prod = crearProducto(1, "Cafe", 1500.0, 20, cat);
     prodRepo.add(prod);
-    Scanner scanner = new Scanner("3\n1\n1\n0\n0\n");
+    Scanner scanner = new Scanner("5\n1\n1\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
@@ -877,14 +880,14 @@ class MainTest {
     assertTrue(output.contains("Cafe"));
     assertTrue(output.contains("1500.0"));
     assertTrue(output.contains("20"));
-    assertTrue(output.contains("Desc Cafe"));
+    assertFalse(output.contains("Desc Cafe"));
   }
 
   @Test
   void testReportePorCategoriaNoActives() {
     FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
     FakeProductoRepository prodRepo = new FakeProductoRepository();
-    Scanner scanner = new Scanner("3\n1\n0\n0\n");
+    Scanner scanner = new Scanner("5\n1\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
@@ -897,7 +900,7 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     Categoria cat = crearCategoria(1, "Vacia");
     catRepo.add(cat);
-    Scanner scanner = new Scanner("3\n1\n1\n0\n0\n");
+    Scanner scanner = new Scanner("5\n1\n1\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo);
     ejecutar(main);
     String output = outContent.toString();
@@ -925,7 +928,7 @@ class MainTest {
     pedido.setTotal(1234.5);
     catalogoService.addPedido(pedido);
 
-    Scanner scanner = new Scanner("3\n2\n1\n0\n0\n");
+    Scanner scanner = new Scanner("5\n2\n1\n0\n0\n");
     Main main = new Main(scanner, catalogoService);
     ejecutar(main);
 
@@ -945,7 +948,7 @@ class MainTest {
         new FakeCatalogoService(
             List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
 
-    Scanner scanner = new Scanner("3\n2\n1\n0\n0\n");
+    Scanner scanner = new Scanner("5\n2\n1\n0\n0\n");
     Main main = new Main(scanner, catalogoService);
     ejecutar(main);
 
@@ -968,7 +971,7 @@ class MainTest {
     pedido.setTotal(3456.78);
     catalogoService.addPedido(pedido);
 
-    Scanner scanner = new Scanner("3\n3\n2\n0\n0\n");
+    Scanner scanner = new Scanner("5\n3\n2\n0\n0\n");
     Main main = new Main(scanner, catalogoService);
     ejecutar(main);
 
@@ -987,7 +990,7 @@ class MainTest {
         new FakeCatalogoService(
             List.of(crearUsuario(1L, "Ana", "ana@example.com", false)), List.of());
 
-    Scanner scanner = new Scanner("3\n3\n2\n0\n0\n");
+    Scanner scanner = new Scanner("5\n3\n2\n0\n0\n");
     Main main = new Main(scanner, catalogoService);
     ejecutar(main);
 
@@ -1044,7 +1047,7 @@ class MainTest {
     terminadoEliminado.setTotal(9999.0);
     catalogoService.addPedido(terminadoEliminado);
 
-    Scanner scanner = new Scanner("3\n4\n0\n0\n");
+    Scanner scanner = new Scanner("5\n4\n0\n0\n");
     Main main = new Main(scanner, catalogoService);
     ejecutar(main);
 
@@ -1069,7 +1072,7 @@ class MainTest {
     pendiente.setTotal(123.45);
     catalogoService.addPedido(pendiente);
 
-    Scanner scanner = new Scanner("3\n4\n0\n0\n");
+    Scanner scanner = new Scanner("5\n4\n0\n0\n");
     Main main = new Main(scanner, catalogoService);
     ejecutar(main);
 
@@ -1085,7 +1088,7 @@ class MainTest {
     FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
-    Scanner scanner = new Scanner("5\n1\nAna\nGomez\nana@example.com\n1234\nClave123\n2\n0\n0\n");
+    Scanner scanner = new Scanner("3\n1\nAna\nGomez\nana@example.com\n1234\nClave123\n2\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 
@@ -1101,7 +1104,7 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
     userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
-    Scanner scanner = new Scanner("5\n1\nAna2\nGomez\nana@example.com\n1234\nClave123\n1\n0\n0\n");
+    Scanner scanner = new Scanner("3\n1\nAna2\nGomez\nana@example.com\n1234\nClave123\n1\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 
@@ -1122,7 +1125,7 @@ class MainTest {
             throw new IllegalStateException("Error: no se pudo persistir el usuario.");
           }
         };
-    Scanner scanner = new Scanner("5\n1\nAna\nGomez\nana@example.com\n1234\nClave123\n2\n0\n0\n");
+    Scanner scanner = new Scanner("3\n1\nAna\nGomez\nana@example.com\n1234\nClave123\n2\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 
@@ -1136,7 +1139,7 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
     Scanner scanner =
-        new Scanner("5\n1\nBruno\nPerez\nbruno@example.com\n9999\nClave123\n3\n1\n0\n0\n");
+        new Scanner("3\n1\nBruno\nPerez\nbruno@example.com\n9999\nClave123\n3\n1\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 
@@ -1153,7 +1156,7 @@ class MainTest {
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
     userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
     Scanner scanner =
-        new Scanner("5\n2\n1\nAna Maria\n\nana.nueva@example.com\n\nNuevaClave\nUSUARIO\n0\n0\n");
+        new Scanner("3\n2\n1\nAna Maria\n\nana.nueva@example.com\n\nNuevaClave\nUSUARIO\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 
@@ -1175,7 +1178,7 @@ class MainTest {
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
     userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
     userRepo.add(crearUsuario(2L, "Bruno", "bruno@example.com", false));
-    Scanner scanner = new Scanner("5\n2\n1\n\n\nbruno@example.com\n\n\n\n0\n0\n");
+    Scanner scanner = new Scanner("3\n2\n1\n\n\nbruno@example.com\n\n\n\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 
@@ -1191,7 +1194,7 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
     userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
-    Scanner scanner = new Scanner("5\n3\n1\n0\n0\n");
+    Scanner scanner = new Scanner("3\n3\n1\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 
@@ -1208,7 +1211,7 @@ class MainTest {
     Producto producto = crearProducto(1L, "Cafe", 12.0, 5, crearCategoria(1, "Bebidas"));
     FakeCatalogoService catalogoService =
         new FakeCatalogoService(List.of(usuario), List.of(producto));
-    Scanner scanner = new Scanner("6\n1\n1\n3\n1\n2\n0\n0\n0\n");
+    Scanner scanner = new Scanner("4\n1\n1\n3\n1\n2\n0\n0\n0\n");
     Main main = new Main(scanner, catalogoService);
     ejecutar(main);
 
@@ -1233,7 +1236,7 @@ class MainTest {
     pedido.setCreatedAt(LocalDateTime.now());
     catalogoService.addPedido(pedido);
 
-    Scanner scanner = new Scanner("6\n2\n10\n2\n0\n0\n");
+    Scanner scanner = new Scanner("4\n2\n10\n2\n0\n0\n");
     Main main = new Main(scanner, catalogoService);
     ejecutar(main);
 
@@ -1259,7 +1262,7 @@ class MainTest {
     pedido.setTotal(42.0);
     catalogoService.addPedido(pedido);
 
-    Scanner scanner = new Scanner("6\n3\n10\n0\n0\n");
+    Scanner scanner = new Scanner("4\n3\n10\n0\n0\n");
     Main main = new Main(scanner, catalogoService);
     ejecutar(main);
 
@@ -1275,7 +1278,7 @@ class MainTest {
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
     userRepo.add(crearUsuario(1L, "Ana", "ana@example.com", false));
-    Scanner scanner = new Scanner("5\n4\n  ANA@EXAMPLE.COM  \n0\n0\n");
+    Scanner scanner = new Scanner("3\n4\n  ANA@EXAMPLE.COM  \n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 
@@ -1291,7 +1294,7 @@ class MainTest {
     FakeCategoriaRepository catRepo = new FakeCategoriaRepository();
     FakeProductoRepository prodRepo = new FakeProductoRepository();
     FakeUsuarioRepository userRepo = new FakeUsuarioRepository();
-    Scanner scanner = new Scanner("5\n4\nnoexiste@example.com\n0\n0\n");
+    Scanner scanner = new Scanner("3\n4\nnoexiste@example.com\n0\n0\n");
     Main main = new Main(scanner, catRepo, prodRepo, userRepo);
     ejecutar(main);
 

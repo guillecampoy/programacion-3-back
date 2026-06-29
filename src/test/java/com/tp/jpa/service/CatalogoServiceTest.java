@@ -883,7 +883,9 @@ class CatalogoServiceTest {
       }
       return store.values().stream()
           .filter(usuario -> !Boolean.TRUE.equals(usuario.getEliminado()))
-          .filter(usuario -> usuario.getMail() != null && usuario.getMail().equalsIgnoreCase(mail))
+          .filter(
+              usuario ->
+                  usuario.getMail() != null && usuario.getMail().equalsIgnoreCase(mail.trim()))
           .findFirst();
     }
 
