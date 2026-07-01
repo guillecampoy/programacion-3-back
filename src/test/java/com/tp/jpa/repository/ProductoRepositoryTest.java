@@ -107,14 +107,14 @@ class ProductoRepositoryTest {
   void testEliminarLogico() {
     Categoria cat = guardarCategoria("Bebidas");
     Producto p = guardarProducto("ParaBorrar", 100.0, 5, cat);
-    assertTrue(productoRepository.cambiarEstadoEliminado(p.getId(), true).getEliminado());
+    assertTrue(productoRepository.eliminarLogico(p.getId()));
     Producto recuperado = productoRepository.buscarPorId(p.getId()).orElseThrow();
     assertTrue(recuperado.getEliminado());
   }
 
   @Test
   void testEliminarLogicoNotFound() {
-    assertNull(productoRepository.cambiarEstadoEliminado(-1L, true));
+    assertFalse(productoRepository.eliminarLogico(-1L));
   }
 
   @Test
@@ -166,5 +166,31 @@ class ProductoRepositoryTest {
     assertNotNull(recuperado.getCreatedAt());
     assertNotNull(recuperado.getCategoria());
     assertEquals(cat.getId(), recuperado.getCategoria().getId());
+  }
+
+  @Test
+  void testGuardarConIdExistenteUsaMerge() {
+    Categoria cat = guardarCategoria("Bebidas");
+    Producto guardado = guardarProducto("Cafe", 1500.0, 20, cat);
+
+    Producto copiaDesacoplada = new Producto();
+    copiaDesacoplada.setId(guardado.getId());
+    copiaDesacoplada.setNombre("Cafe Molido");
+    copiaDesacoplada.setPrecio(1600.0);
+    copiaDesacoplada.setDescripcion("Desc Cafe Molido");
+    copiaDesacoplada.setStock(25);
+    copiaDesacoplada.setImagen("test-2.png");
+    copiaDesacoplada.setDisponible(true);
+    copiaDesacoplada.setEliminado(false);
+    copiaDesacoplada.setCreatedAt(guardado.getCreatedAt());
+    copiaDesacoplada.setCategoria(cat);
+
+    Producto persistido = productoRepository.guardar(copiaDesacoplada);
+    assertEquals(guardado.getId(), persistido.getId());
+
+    Producto recuperado = productoRepository.buscarPorId(guardado.getId()).orElseThrow();
+    assertEquals("Cafe Molido", recuperado.getNombre());
+    assertEquals(1600.0, recuperado.getPrecio(), 0.001);
+    assertEquals(25, recuperado.getStock());
   }
 }

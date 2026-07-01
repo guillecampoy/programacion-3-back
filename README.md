@@ -1,32 +1,85 @@
-# Parcial 2 - Programacion III - JPA
+# Programacion III - Backend JPA
 
-Entrega final del parcial de Java Persistence API sobre repositorios, ABM de categorias/productos y consulta JPQL por categoria.
+Backend de consola para el TPI de Programacion III con Java, Gradle, JPA/Hibernate y H2 en archivo.
 
-El proyecto queda unificado bajo la paqueteria `com.tp.jpa`, con una unica clase de entrada `com.tp.jpa.Main`. El modelo respeta las relaciones del UML de `docs/diagrama.puml`; ese archivo no fue modificado.
+La referencia de entrega para este proyecto es `docs/TPI.pdf`, contrastada con `docs/diagrama.puml` para preservar las relaciones del dominio. En este repo se implementa el backend evaluable y, aparte, se conservan algunas utilidades de prueba y recuperacion que no cambian la consigna principal.
 
-## Funcionalidades
+## Fuente de verdad y criterio de alcance
 
-La aplicacion de consola permite:
+1. `docs/TPI.pdf` define las historias, las firmas esperadas y la rubricacion del backend.
+2. `docs/diagrama.puml` se toma como contrato fijo de relaciones entre entidades.
+3. Cuando el PDF y una utilidad local no coinciden, la entrega prioriza el PDF.
+4. Las extensiones locales se mantienen separadas para no contaminar lo evaluable.
 
-1. ABM de categorias.
-2. ABM de productos.
-3. Listado de categorias activas.
-4. Listado de productos activos.
-5. Reversion de baja logica en categorias y productos.
-6. Baja logica mediante el campo `eliminado`.
-7. Baja logica en cascada de productos cuando se elimina una categoria.
-8. Reporte de productos activos por categoria usando JPQL.
-9. Persistencia JPA/Hibernate con H2.
-10. Carga inicial de datos de ejemplo.
+## Requerido por la rubrica
 
-## Estructura
+### Dominio
+
+1. `Base` centraliza `id`, `eliminado` y `createdAt`.
+2. `Categoria`, `Producto`, `Usuario`, `Pedido` y `DetallePedido` conforman el modelo persistente.
+3. `Pedido` implementa `Calculable` y compone sus detalles.
+4. `Producto` referencia una `Categoria`.
+5. `Usuario` referencia sus `Pedido`.
+6. `DetallePedido` referencia `Producto`.
+
+### Repositorios
+
+1. `BaseRepository<T>` implementa `guardar`, `buscarPorId`, `listarActivos` y `eliminarLogico`.
+2. `CategoriaRepository` solo extiende la base.
+3. `ProductoRepository.buscarPorCategoria(Long)` usa JPQL tipado con `:catId`.
+4. `UsuarioRepository.buscarPorMail(String)` usa JPQL tipado con `:mail` y retorna `Optional<Usuario>`.
+5. `PedidoRepository.buscarPorUsuario(Long)` y `buscarPorEstado(Estado)` usan JPQL tipado.
+6. `total facturado` se calcula solo con pedidos `TERMINADO` activos; no suma `PENDIENTE`, `CONFIRMADO`, `CANCELADO` ni eliminados.
+
+### Consola
+
+1. El menu principal queda ordenado como `Categorias`, `Productos`, `Usuarios`, `Pedidos`, `Reportes`.
+2. El submenu de categorias cubre alta, modificacion, baja logica y listado.
+3. El submenu de productos cubre alta, modificacion, baja logica y listado.
+4. El submenu de usuarios cubre alta, modificacion, baja logica y busqueda por mail.
+5. El submenu de pedidos cubre alta con detalles, cambio de estado y baja logica.
+6. El submenu de reportes cubre productos por categoria, pedidos por usuario, pedidos por estado y total facturado.
+
+### Validacion
+
+1. La operacion de alta de pedido corre en una transaccion unica.
+2. Las bajas son logicas.
+3. Los campos en blanco en modificaciones conservan el valor anterior.
+4. Al salir de la aplicacion se cierra `JPAUtil`.
+
+## Consideraciones adicionales
+
+Estas opciones no forman parte del recorrido evaluable principal, pero se mantienen porque ayudan a probar el sistema sin tocar el contrato del modelo:
+
+1. `Regenerar datos`.
+2. `Revertir baja logica de categoria`.
+3. `Revertir baja logica de producto`.
+
+El menu las muestra separadas del bloque requerido, con una subtitulo propio, para que quede claro que son auxiliares de prueba y no cambian el orden de la entrega.
+
+### Criterio aplicado
+
+1. La busqueda de usuario por mail se dejo exacta porque eso es lo que pide la rubrica; la coincidencia parcial quedo solo como posible ampliacion futura.
+2. El menu principal se reordeno para que la ruta evaluable quede primero y las utilidades de prueba queden al final.
+3. El listado de productos agrega `disponible` porque el PDF lo pide; el reporte por categoria no arrastra columnas extra.
+4. Las opciones de restauracion y regeneracion se conservaron porque facilitan las pruebas manuales, pero no reemplazan el recorrido principal de la entrega.
+5. `docs/TPI.pdf` si explicita el origen del calculo: `Total facturado` toma `pedidoRepo.buscarPorEstado(Estado.TERMINADO)` y suma sus totales, filtrando `eliminado = false`.
+
+## Estado actual
+
+1. El repositorio ya cubre las historias de backend del PDF.
+2. Los tests automaticos cubren repositorios, servicios, modelo, utilidades y flujo de consola.
+3. El orden del menu principal y los reportes se alinean con la rubrica.
+4. Las utilidades adicionales quedan documentadas aparte.
+
+## Estructura actual
 
 ```text
 src/main/java/com/tp/jpa/
-  Main.java                      # unica entrada de consola
-  H2LocalConsole.java            # consola web H2 opcional
+  Main.java
+  H2LocalConsole.java
   model/
-    Base.java                    # clase base con id, eliminado y createdAt
+    Base.java
     Categoria.java
     Producto.java
     Usuario.java
@@ -41,216 +94,42 @@ src/main/java/com/tp/jpa/
     BaseRepository.java
     CategoriaRepository.java
     ProductoRepository.java
+    UsuarioRepository.java
+    PedidoRepository.java
   service/
-    CatalogoService.java         # reglas de negocio y validaciones
+    CatalogoService.java
   seed/
+    DatosSemilla.java
     DatosSemillaFactory.java
     PersistenciaInicial.java
   util/
     JPAUtil.java
     ConsolaUtils.java
     EntradaValidada.java
+    ManejoErroresConsola.java
+
+src/test/java/com/tp/jpa/
+  MainTest.java
+  integration/JpaIntegrationTest.java
+  model/RelacionesTest.java
+  repository/CategoriaRepositoryTest.java
+  repository/ProductoRepositoryTest.java
+  repository/PedidoRepositoryTest.java
+  repository/UsuarioRepositoryTest.java
+  seed/PersistenciaInicialTest.java
+  service/CatalogoServiceTest.java
+  service/CatalogoServicePedidosTest.java
+  util/EntradaValidadaTest.java
+  util/ManejoErroresConsolaTest.java
 ```
 
-Los tests estan en `src/test/java/com/tp/jpa/` y cubren entidades, repositorios, servicio, consola, persistencia inicial e integracion JPA.
+## Validacion
 
-## Modelo
-
-Las entidades conservan las relaciones indicadas en el UML:
-
-1. `Usuario` hereda de `Base` y se relaciona con muchos `Pedido`.
-2. `Categoria` hereda de `Base` y agrupa muchos `Producto`.
-3. `Producto` hereda de `Base` y referencia una `Categoria`.
-4. `Pedido` hereda de `Base`, implementa `Calculable`, pertenece a un `Usuario` y compone muchos `DetallePedido`.
-5. `DetallePedido` hereda de `Base` y referencia un `Producto`.
-6. `UsuarioDTO` depende de `Usuario`.
-
-No se modifico `docs/diagrama.puml`.
-
-## IDs Autogenerados
-
-`Base` centraliza el identificador y delega la generacion a JPA:
-
-```java
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
-```
-
-Las altas crean entidades con `id == null`. El ID se obtiene despues de persistir usando la instancia retornada por `guardar(...)` o la entidad administrada por JPA.
-
-La semilla tampoco fija IDs manuales; arma relaciones con referencias a objetos.
-
-## Repositorios
-
-`BaseRepository<T>` implementa:
-
-```java
-public T guardar(T entity);
-public Optional<T> buscarPorId(Long id);
-public List<T> listarActivos();
-public T cambiarEstadoEliminado(Long id, boolean eliminado);
-```
-
-Cada metodo abre y cierra su propio `EntityManager`. Las escrituras usan transaccion, `merge()` y rollback ante error.
-
-`ProductoRepository.buscarPorCategoria(Long categoriaId)` usa JPQL tipado y parametro nombrado:
-
-```jpql
-select p from Producto p
-where p.categoria.id = :categoriaId
-  and p.eliminado = false
-```
-
-## Capa de Servicio
-
-`CatalogoService` separa la logica de negocio de la consola. Se encarga de:
-
-1. Crear categorias y productos.
-2. Modificar categorias y productos.
-3. Ejecutar bajas logicas.
-4. Validar existencia y estado activo.
-5. Validar entrada antes de construir o mutar entidades.
-6. Obtener listados activos para consola y reportes.
-7. Al dar de baja una categoria, desactivar en cascada sus productos activos y mostrar un breve reporte de los afectados.
-
-Validaciones defensivas en servicio:
-
-1. IDs obligatorios y mayores a 0.
-2. Nombre y descripcion obligatorios en altas.
-3. Precio de producto mayor a 0.
-4. Stock mayor o igual a 0.
-5. En modificaciones, campos vacios conservan el valor previo; campos presentes se validan antes de tocar la entidad.
-
-## Menu de Consola
-
-Menu principal:
-
-```text
-Sistema JPA - Categorias y Productos
-1. Categorias
-2. Productos
-3. Reportes
-4. Regenerar datos
-0. Salir
-```
-
-Categorias:
-
-```text
-1. Alta de categoria
-2. Modificar categoria
-3. Baja logica de categoria
-4. Listar categorias activas
-5. Revertir baja logica
-0. Volver
-```
-
-Productos:
-
-```text
-1. Alta de producto
-2. Modificar producto
-3. Baja logica de producto
-4. Listar productos activos
-5. Revertir baja logica
-0. Volver
-```
-
-Reportes:
-
-```text
-1. Productos por categoria
-0. Volver
-```
-
-## Configuracion JPA
-
-La unidad de persistencia es `miUnidad`, definida en:
-
-```text
-src/main/resources/META-INF/persistence.xml
-```
-
-Entidades registradas:
-
-```text
-com.tp.jpa.model.Usuario
-com.tp.jpa.model.Categoria
-com.tp.jpa.model.Producto
-com.tp.jpa.model.Pedido
-com.tp.jpa.model.DetallePedido
-```
-
-La base local usa H2 en archivo:
-
-```text
-jdbc:h2:file:./data/jpa_db
-```
-
-La base local no se versiona. Hibernate la crea automaticamente al ejecutar la aplicacion si no existe. La configuracion local usa `hibernate.hbm2ddl.auto=update`, por lo que no borra datos en cada arranque.
-
-Al iniciar la aplicacion se aplica la semilla solo cuando la base local no existe o no tiene registros. Para volver a cargar una base limpia desde cero, usar la opcion `Regenerar datos` del menu principal; esa accion borra los archivos locales de H2, recrea el esquema nuevo y vuelve a aplicar la semilla.
-La opcion `Revertir baja logica` muestra solo registros eliminados para evitar restauraciones accidentales.
-La baja logica de una categoria desactiva tambien sus productos activos asociados para evitar dejar referencias funcionales incongruentes; la consola muestra un reporte breve de esos productos.
-
-## Ejecucion
-
-Compilar:
-
-```bash
-./gradlew build
-```
-
-Ejecutar la aplicacion:
-
-```bash
-./gradlew run
-```
-
-Clase principal:
-
-```text
-com.tp.jpa.Main
-```
-
-## Verificacion
-
-Suite completa:
+Los comandos que se usan como cierre son:
 
 ```bash
 ./gradlew test
+./gradlew check
 ```
 
-Lint basico de formato:
-
-```bash
-./gradlew lintJavaFormatting
-```
-
-Tests relevantes:
-
-```bash
-./gradlew test --tests com.tp.jpa.MainTest
-./gradlew test --tests com.tp.jpa.service.CatalogoServiceTest
-./gradlew test --tests com.tp.jpa.repository.CategoriaRepositoryTest
-./gradlew test --tests com.tp.jpa.repository.ProductoRepositoryTest
-./gradlew test --tests com.tp.jpa.integration.JpaIntegrationTest
-```
-
-## Correspondencia con Historias
-
-| Historia | Estado | Implementacion |
-|----------|--------|----------------|
-| HU-01 BaseRepository | Completa | `BaseRepository<T>` con `guardar`, `buscarPorId`, `listarActivos`, `eliminarLogico`, transacciones y cierre de `EntityManager`. |
-| HU-02 Repositorios especificos | Completa | `CategoriaRepository` y `ProductoRepository`, incluyendo `buscarPorCategoria`. |
-| HU-03 Alta categoria | Completa | Menu de categorias, validacion de nombre/descripcion, ID visible. |
-| HU-04 Modificar categoria | Completa | Lista activas, valida ID, muestra valores actuales, campos vacios conservan valor. |
-| HU-05 Baja categoria | Completa | Baja logica, valida inexistente o ya eliminada, no aparece en listados activos. |
-| HU-06 Alta producto | Completa | Lista categorias activas, valida precio/stock, relacion `ManyToOne`, ID visible. |
-| HU-07 Modificar producto | Completa | Lista activos, valida ID, muestra valores actuales, valida precio/stock y permite reasignar a categoria activa. |
-| HU-08 Baja producto | Completa | Baja logica, confirma con nombre, no aparece en listados activos. |
-| HU-09 Consulta JPQL | Completa | Reporte por categoria con JPQL tipado y parametro `:categoriaId`. |
-
-### [Video de Demostracion](https://youtu.be/HgKRvewNqAE)
-- https://youtu.be/HgKRvewNqAE
+`test` valida el comportamiento funcional. `check` agrega Spotless y confirma que el cierre no deja desalineaciones de formato.

@@ -29,7 +29,7 @@ public class Categoria extends Base {
   }
 
   public void setDescripcion(String descripcion) {
-    this.descripcion = requireNonBlank(descripcion, "La descripcion");
+    this.descripcion = descripcion == null ? "" : descripcion.trim();
   }
 
   public void setProductos(Set<Producto> productos) {

@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id 'com.diffplug.spotless' version '7.0.4'
+    id 'jacoco'
 }
 
 group = 'org.example'
@@ -61,10 +62,42 @@ test {
     }
 }
 
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn test
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+check.dependsOn tasks.named('jacocoTestCoverageVerification')
+
 check.dependsOn tasks.named('spotlessCheck')
+build.dependsOn tasks.named('spotlessApply')
 
 tasks.register('format') {
     group = 'formatting'
     description = 'Formats source files using Spotless.'
+    dependsOn tasks.named('spotlessApply')
+}
+
+tasks.register('autofix') {
+    group = 'formatting'
+    description = 'Runs Spotless autofix without invoking the full build.'
     dependsOn tasks.named('spotlessApply')
 }

@@ -89,14 +89,14 @@ class CategoriaRepositoryTest {
   void testEliminarLogico() {
     Categoria c = crearCategoria("ParaBorrar");
     Categoria guardada = repository.guardar(c);
-    assertTrue(repository.cambiarEstadoEliminado(guardada.getId(), true).getEliminado());
+    assertTrue(repository.eliminarLogico(guardada.getId()));
     Categoria recuperada = repository.buscarPorId(guardada.getId()).orElseThrow();
     assertTrue(recuperada.getEliminado());
   }
 
   @Test
   void testEliminarLogicoNotFound() {
-    assertNull(repository.cambiarEstadoEliminado(-1L, true));
+    assertFalse(repository.eliminarLogico(-1L));
   }
 
   @Test
@@ -116,5 +116,23 @@ class CategoriaRepositoryTest {
     assertEquals("Desc Lacteos", recuperada.getDescripcion());
     assertFalse(recuperada.getEliminado());
     assertNotNull(recuperada.getCreatedAt());
+  }
+
+  @Test
+  void testGuardarConIdExistenteUsaMerge() {
+    Categoria guardada = repository.guardar(crearCategoria("Original"));
+    Categoria copiaDesacoplada = new Categoria();
+    copiaDesacoplada.setId(guardada.getId());
+    copiaDesacoplada.setNombre("Actualizada");
+    copiaDesacoplada.setDescripcion("Desc Actualizada");
+    copiaDesacoplada.setEliminado(false);
+    copiaDesacoplada.setCreatedAt(guardada.getCreatedAt());
+
+    Categoria persistida = repository.guardar(copiaDesacoplada);
+    assertEquals(guardada.getId(), persistida.getId());
+
+    Categoria recuperada = repository.buscarPorId(guardada.getId()).orElseThrow();
+    assertEquals("Actualizada", recuperada.getNombre());
+    assertEquals("Desc Actualizada", recuperada.getDescripcion());
   }
 }
