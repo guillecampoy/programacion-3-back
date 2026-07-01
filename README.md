@@ -29,6 +29,7 @@ La referencia de entrega para este proyecto es `docs/TPI.pdf`, contrastada con `
 3. `ProductoRepository.buscarPorCategoria(Long)` usa JPQL tipado con `:catId`.
 4. `UsuarioRepository.buscarPorMail(String)` usa JPQL tipado con `:mail` y retorna `Optional<Usuario>`.
 5. `PedidoRepository.buscarPorUsuario(Long)` y `buscarPorEstado(Estado)` usan JPQL tipado.
+6. `total facturado` se calcula solo con pedidos `TERMINADO` activos; no suma `PENDIENTE`, `CONFIRMADO`, `CANCELADO` ni eliminados.
 
 ### Consola
 
@@ -62,6 +63,7 @@ El menu las muestra separadas del bloque requerido, con una subtitulo propio, pa
 2. El menu principal se reordeno para que la ruta evaluable quede primero y las utilidades de prueba queden al final.
 3. El listado de productos agrega `disponible` porque el PDF lo pide; el reporte por categoria no arrastra columnas extra.
 4. Las opciones de restauracion y regeneracion se conservaron porque facilitan las pruebas manuales, pero no reemplazan el recorrido principal de la entrega.
+5. `docs/TPI.pdf` si explicita el origen del calculo: `Total facturado` toma `pedidoRepo.buscarPorEstado(Estado.TERMINADO)` y suma sus totales, filtrando `eliminado = false`.
 
 ## Estado actual
 

@@ -444,9 +444,11 @@ public class Main {
   }
 
   private void totalFacturado() {
-    imprimirTitulo("Total facturado");
+    imprimirTitulo("Total facturado (solo pedidos TERMINADO)");
     double total = catalogoService.totalFacturadoTerminados();
-    System.out.println("Total facturado: " + String.format(Locale.US, "$%.2f", total));
+    System.out.println(
+        "Total facturado (solo pedidos TERMINADO): "
+            + String.format(Locale.US, "$%.2f", total));
   }
 
   private void modificarProducto() {
